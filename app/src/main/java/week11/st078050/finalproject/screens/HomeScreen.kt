@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.auth.FirebaseAuth
 import week11.st078050.finalproject.ui.theme.components.GradientBackground
 import week11.st078050.finalproject.ui.theme.*
 
@@ -22,8 +23,13 @@ fun HomeScreen(
     calories: Int = 220,
     distanceKm: Double = 3.9,
     onStartRoute: () -> Unit = {},
-    onStartPoseDetection: () -> Unit = {}
+    onStartPoseDetection: () -> Unit = {},
+    onLogout: () -> Unit = {}
 ) {
+    val auth = FirebaseAuth.getInstance()
+    val user = auth.currentUser
+    val email = user?.email ?: "User"
+
     var voiceAlertsEnabled by remember { mutableStateOf(false) }
 
     GradientBackground {
@@ -43,7 +49,7 @@ fun HomeScreen(
             ) {
                 Column {
                     Text(
-                        text = "Hi, User",
+                        text = "Hi, ${email.substringBefore("@")}",
                         fontSize = 28.sp,
                         color = TextWhite,
                         fontWeight = FontWeight.Bold
@@ -55,13 +61,33 @@ fun HomeScreen(
                     )
                 }
 
-                // Profile Placeholder
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF3C3454))
-                )
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
+                    // Profile Placeholder
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF3C3454))
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    TextButton(
+                        onClick = {
+                            auth.signOut()
+                            onLogout()
+                        }
+                    ) {
+                        Text(
+                            text = "Logout",
+                            color = YellowAccent,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -89,7 +115,6 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-
                         ActivityStat("Steps", stepsToday.toString())
                         ActivityStat("Calories", "${calories} kcal")
                         ActivityStat("Distance", "${distanceKm} km")
@@ -121,7 +146,12 @@ fun HomeScreen(
                     modifier = Modifier.padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Live Step Counter", color = TextWhite, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        "Live Step Counter",
+                        color = TextWhite,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Box(
@@ -179,7 +209,11 @@ fun HomeScreen(
                             .fillMaxWidth()
                             .height(52.dp)
                     ) {
-                        Text("Start Route Tracking", color = Color.Black, fontWeight = FontWeight.Bold)
+                        Text(
+                            "Start Route Tracking",
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
@@ -199,7 +233,12 @@ fun HomeScreen(
             ) {
 
                 Column {
-                    Text("Voice Alerts", color = TextWhite, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        "Voice Alerts",
+                        color = TextWhite,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                     Text("Enable audio updates while running", color = TextGrey)
                 }
 
@@ -224,7 +263,11 @@ fun HomeScreen(
                     .fillMaxWidth()
                     .height(55.dp)
             ) {
-                Text("Start Pose Detection", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text(
+                    "Start Pose Detection",
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
@@ -234,6 +277,11 @@ fun HomeScreen(
 fun ActivityStat(label: String, value: String) {
     Column(horizontalAlignment = Alignment.Start) {
         Text(label, color = TextGrey, fontSize = 14.sp)
-        Text(value, color = YellowAccent, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Text(
+            value,
+            color = YellowAccent,
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp
+        )
     }
 }

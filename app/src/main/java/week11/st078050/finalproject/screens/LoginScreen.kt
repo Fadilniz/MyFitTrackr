@@ -19,12 +19,11 @@ import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import week11.st078050.finalproject.ui.theme.components.GradientBackground
 import week11.st078050.finalproject.ui.theme.*
-import week11.st078050.finalproject.ui.theme.components.GradientBackground
 
 @Composable
 fun LoginScreen(
     onBackClick: () -> Unit = {},
-    onLoginSuccess: () -> Unit = {},
+    onLoginClick: () -> Unit = {},
     onForgotPasswordClick: () -> Unit = {},
     onRegisterClick: () -> Unit = {}
 ) {
@@ -176,7 +175,7 @@ fun LoginScreen(
                             .addOnCompleteListener { task ->
                                 isLoading = false
                                 if (task.isSuccessful) {
-                                    onLoginSuccess()
+                                    onLoginClick()
                                 } else {
                                     errorMessage = task.exception?.message ?: "Login failed"
                                 }

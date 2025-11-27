@@ -77,7 +77,16 @@ fun AppNavGraph(navController: NavHostController) {
 
         // HOME
         composable("home") {
-            HomeScreen()
+            HomeScreen(
+                onStartRoute = { /* later */ },
+                onStartPoseDetection = { /* later */ },
+                onLogout = {
+                    //auth.signOut()
+                    navController.navigate("login") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }

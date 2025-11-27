@@ -13,14 +13,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import week11.st078050.finalproject.ui.theme.*
+import com.google.firebase.auth.FirebaseAuth
 import week11.st078050.finalproject.ui.theme.components.GradientBackground
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-
+import week11.st078050.finalproject.ui.theme.*
 
 @Composable
 fun RegisterScreen(
@@ -36,6 +34,11 @@ fun RegisterScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    val auth = FirebaseAuth.getInstance()
+
     GradientBackground {
         Column(
             modifier = Modifier
@@ -44,7 +47,7 @@ fun RegisterScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // BACK ARROW
+            // Back Button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -63,6 +66,7 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Logo
             Icon(
                 imageVector = Icons.Default.FitnessCenter,
                 contentDescription = "Logo",
@@ -72,6 +76,7 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
 
+            // Title
             Text(
                 text = "Hello! Register to get\nstarted",
                 color = TextWhite,
@@ -86,18 +91,19 @@ fun RegisterScreen(
             TextField(
                 value = username,
                 onValueChange = { username = it },
-                placeholder = { Text("Username", color = TextGrey) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
+                placeholder = { Text("Username", color = TextGrey, fontSize = 15.sp) },
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = GreyInput,
                     unfocusedContainerColor = GreyInput,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
                     focusedTextColor = TextWhite,
-                    unfocusedTextColor = TextWhite
-                )
+                    unfocusedTextColor = TextWhite,
+                    cursorColor = TextLightGrey
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(55.dp)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -106,18 +112,19 @@ fun RegisterScreen(
             TextField(
                 value = email,
                 onValueChange = { email = it },
-                placeholder = { Text("Email", color = TextGrey) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
+                placeholder = { Text("Email", color = TextGrey, fontSize = 15.sp) },
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = GreyInput,
                     unfocusedContainerColor = GreyInput,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
                     focusedTextColor = TextWhite,
-                    unfocusedTextColor = TextWhite
-                )
+                    unfocusedTextColor = TextWhite,
+                    cursorColor = TextLightGrey
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(55.dp)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -126,29 +133,31 @@ fun RegisterScreen(
             TextField(
                 value = password,
                 onValueChange = { password = it },
-                placeholder = { Text("Password", color = TextGrey) },
+                placeholder = { Text("Password", color = TextGrey, fontSize = 15.sp) },
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                            tint = TextLightGrey,
-                            contentDescription = "Toggle password"
+                            contentDescription = "Toggle Password",
+                            tint = TextLightGrey
                         )
                     }
                 },
-                visualTransformation = if (passwordVisible)
-                    VisualTransformation.None else PasswordVisualTransformation(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
+                visualTransformation =
+                    if (passwordVisible) androidx.compose.ui.text.input.VisualTransformation.None
+                    else androidx.compose.ui.text.input.PasswordVisualTransformation(),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = GreyInput,
                     unfocusedContainerColor = GreyInput,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
                     focusedTextColor = TextWhite,
-                    unfocusedTextColor = TextWhite
-                )
+                    unfocusedTextColor = TextWhite,
+                    cursorColor = TextLightGrey
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(55.dp)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -157,47 +166,95 @@ fun RegisterScreen(
             TextField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
-                placeholder = { Text("Confirm Password", color = TextGrey) },
+                placeholder = { Text("Confirm password", color = TextGrey, fontSize = 15.sp) },
                 trailingIcon = {
                     IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                         Icon(
                             imageVector = if (confirmPasswordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                            tint = TextLightGrey,
-                            contentDescription = "Toggle password"
+                            contentDescription = "Toggle Confirm Password",
+                            tint = TextLightGrey
                         )
                     }
                 },
-                visualTransformation = if (confirmPasswordVisible)
-                    VisualTransformation.None else PasswordVisualTransformation(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
+                visualTransformation =
+                    if (confirmPasswordVisible) androidx.compose.ui.text.input.VisualTransformation.None
+                    else androidx.compose.ui.text.input.PasswordVisualTransformation(),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = GreyInput,
                     unfocusedContainerColor = GreyInput,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
                     focusedTextColor = TextWhite,
-                    unfocusedTextColor = TextWhite
-                )
+                    unfocusedTextColor = TextWhite,
+                    cursorColor = TextLightGrey
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(55.dp)
             )
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
+            // ERROR MESSAGE
+            errorMessage?.let {
+                Text(
+                    text = it,
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // REGISTER BUTTON
             Button(
-                onClick = { onRegisterSuccess() },
-                colors = ButtonDefaults.buttonColors(containerColor = WhiteButton),
+                onClick = {
+                    errorMessage = null
+                    if (username.isBlank() || email.isBlank() || password.isBlank() || confirmPassword.isBlank()) {
+                        errorMessage = "Please fill all fields"
+                    } else if (password != confirmPassword) {
+                        errorMessage = "Passwords do not match"
+                    } else {
+                        isLoading = true
+                        auth.createUserWithEmailAndPassword(email.trim(), password)
+                            .addOnCompleteListener { task ->
+                                isLoading = false
+                                if (task.isSuccessful) {
+                                    onRegisterSuccess()
+                                } else {
+                                    errorMessage = task.exception?.message ?: "Registration failed"
+                                }
+                            }
+                    }
+                },
+                enabled = !isLoading,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = WhiteButton
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(55.dp)
             ) {
-                Text("Register", color = Color.Black, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = if (isLoading) "Registering..." else "Register",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black
+                )
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Login link
             Row {
-                Text("Already have an account? ", color = TextLightGrey)
+                Text(
+                    text = "Already have an account? ",
+                    color = TextLightGrey
+                )
                 Text(
                     text = "Login Now",
                     color = YellowAccent,

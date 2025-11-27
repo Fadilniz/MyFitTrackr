@@ -20,7 +20,8 @@ import week11.st078050.finalproject.ui.theme.*
 @Composable
 fun ForgotPasswordScreen(
     onBackClick: () -> Unit = {},
-    onLoginClick: () -> Unit = {}
+    onLoginClick: () -> Unit = {},
+    onSendClick: () -> Unit = {}   // <— this will now be used
 ) {
     var email by remember { mutableStateOf("") }
     var message by remember { mutableStateOf<String?>(null) }
@@ -133,6 +134,8 @@ fun ForgotPasswordScreen(
                                 isLoading = false
                                 if (task.isSuccessful) {
                                     message = "Password reset email sent. Check your inbox."
+                                    // 🔥 NOW CALL THE NAVIGATION CALLBACK
+                                    onSendClick()
                                 } else {
                                     errorMessage = task.exception?.message ?: "Failed to send reset email"
                                 }

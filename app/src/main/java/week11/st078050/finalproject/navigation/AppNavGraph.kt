@@ -14,30 +14,35 @@ fun AppNavGraph(navController: NavHostController) {
         startDestination = "splash"
     ) {
 
+        // SPLASH
         composable("splash") {
             SplashScreen(
                 onLoginClick = { navController.navigate("login") },
                 onRegisterClick = { navController.navigate("register") },
-                onGuestClick = { /* later */ }
+                onGuestClick = { navController.navigate("home") }
             )
         }
 
+        // LOGIN
         composable("login") {
             LoginScreen(
                 onBackClick = { navController.popBackStack() },
-                onLoginClick = { /* later */ },
+                onLoginClick = { navController.navigate("home") },
                 onForgotPasswordClick = { navController.navigate("forgot") },
                 onRegisterClick = { navController.navigate("register") }
             )
         }
 
+        // REGISTER
         composable("register") {
             RegisterScreen(
                 onBackClick = { navController.popBackStack() },
+                onRegisterSuccess = { navController.navigate("home") },
                 onLoginClick = { navController.navigate("login") }
             )
         }
 
+        // FORGOT PASSWORD
         composable("forgot") {
             ForgotPasswordScreen(
                 onBackClick = { navController.popBackStack() },
@@ -46,14 +51,16 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
 
+        // OTP
         composable("otp") {
             OtpScreen(
                 onBackClick = { navController.popBackStack() },
                 onVerifyClick = { navController.navigate("createNewPassword") },
-                onResendClick = { /* resend code */ }
+                onResendClick = {}
             )
         }
 
+        // CREATE NEW PASSWORD
         composable("createNewPassword") {
             CreateNewPasswordScreen(
                 onBackClick = { navController.popBackStack() },
@@ -61,10 +68,16 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
 
+        // PASSWORD CHANGED SUCCESS
         composable("passwordChanged") {
             PasswordChangedScreen(
                 onLoginClick = { navController.navigate("login") }
             )
+        }
+
+        // HOME
+        composable("home") {
+            HomeScreen()
         }
     }
 }

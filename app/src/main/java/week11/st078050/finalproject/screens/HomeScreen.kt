@@ -1,287 +1,193 @@
 package week11.st078050.finalproject.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.firebase.auth.FirebaseAuth
+import week11.st078050.finalproject.ui.theme.TextGrey
+import week11.st078050.finalproject.ui.theme.TextWhite
+import week11.st078050.finalproject.ui.theme.YellowAccent
 import week11.st078050.finalproject.ui.theme.components.GradientBackground
-import week11.st078050.finalproject.ui.theme.*
 
 @Composable
 fun HomeScreen(
-    stepsToday: Int = 5420,
-    calories: Int = 220,
-    distanceKm: Double = 3.9,
     onStartRoute: () -> Unit = {},
     onStartPoseDetection: () -> Unit = {},
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
+    onStepsClick: () -> Unit = {} // ADDED HANDLER
 ) {
-    val auth = FirebaseAuth.getInstance()
-    val user = auth.currentUser
-    val email = user?.email ?: "User"
-
-    var voiceAlertsEnabled by remember { mutableStateOf(false) }
 
     GradientBackground {
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .padding(20.dp)
         ) {
 
-            // -------------------------
-            // HEADER
-            // -------------------------
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = "Hi, ${email.substringBefore("@")}",
-                        fontSize = 28.sp,
-                        color = TextWhite,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Welcome back!",
-                        color = TextGrey,
-                        fontSize = 16.sp
-                    )
-                }
+            // Header
+            Text(
+                text = "Hi, User!",
+                color = TextWhite,
+                fontSize = 30.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Welcome back!",
+                color = TextGrey,
+                fontSize = 16.sp
+            )
 
-                Column(
-                    horizontalAlignment = Alignment.End
-                ) {
-                    // Profile Placeholder
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF3C3454))
-                    )
+            Spacer(modifier = Modifier.height(25.dp))
 
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    TextButton(
-                        onClick = {
-                            auth.signOut()
-                            onLogout()
-                        }
-                    ) {
-                        Text(
-                            text = "Logout",
-                            color = YellowAccent,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // -------------------------
-            // ACTIVITY DASHBOARD CARD
-            // -------------------------
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF2A2438)),
-                shape = RoundedCornerShape(20.dp)
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-
-                    Text(
-                        text = "Today's Activity",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextWhite
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        ActivityStat("Steps", stepsToday.toString())
-                        ActivityStat("Calories", "${calories} kcal")
-                        ActivityStat("Distance", "${distanceKm} km")
-                    }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    // Placeholder for chart
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(120.dp)
-                            .background(Color(0xFF1F1B2E), RoundedCornerShape(16.dp))
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // -------------------------
-            // LIVE STEP COUNTER
-            // -------------------------
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF2A2438)),
-                shape = RoundedCornerShape(20.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        "Live Step Counter",
-                        color = TextWhite,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF3C3454)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = stepsToday.toString(),
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = YellowAccent
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text("Steps Today", color = TextGrey)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // -------------------------
-            // GPS ROUTE TRACKING SECTION
-            // -------------------------
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF2A2438)),
-                shape = RoundedCornerShape(20.dp)
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-
-                    Text(
-                        text = "Track Your Route",
-                        color = TextWhite,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Text(
-                        text = "Start GPS tracking to monitor your path.",
-                        color = TextGrey
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(
-                        onClick = onStartRoute,
-                        colors = ButtonDefaults.buttonColors(containerColor = YellowAccent),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp)
-                    ) {
-                        Text(
-                            "Start Route Tracking",
-                            color = Color.Black,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // -------------------------
-            // VOICE ALERTS SWITCH
-            // -------------------------
-            Row(
+            // ------------------------------
+            // TODAY'S ACTIVITY CARD
+            // ------------------------------
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF2A2438), RoundedCornerShape(16.dp))
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .background(Color(0x44222222), RoundedCornerShape(20.dp))
+                    .padding(20.dp)
             ) {
-
                 Column {
-                    Text(
-                        "Voice Alerts",
-                        color = TextWhite,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text("Enable audio updates while running", color = TextGrey)
-                }
+                    Text("Today's Activity", color = TextGrey, fontSize = 14.sp)
 
-                Switch(
-                    checked = voiceAlertsEnabled,
-                    onCheckedChange = { voiceAlertsEnabled = it },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = YellowAccent
-                    )
-                )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        StatItem("Steps", "5420")
+                        StatItem("Calories", "220 kcal")
+                        StatItem("Distance", "3.9 km")
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // -------------------------
-            // POSE DETECTION BUTTON
-            // -------------------------
-            Button(
-                onClick = onStartPoseDetection,
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+            // ------------------------------
+            // STEP COUNTER CARD (Clickable)
+            // ------------------------------
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(55.dp)
+                    .background(Color(0x44222222), RoundedCornerShape(20.dp))
+                    .padding(20.dp)
+                    .clickable { onStepsClick() }
             ) {
-                Text(
-                    "Start Pose Detection",
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+                    Text(
+                        text = "Live Step Counter",
+                        color = TextWhite,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "5420",
+                        color = YellowAccent,
+                        fontSize = 48.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Text(
+                        text = "Steps Today",
+                        color = TextGrey,
+                        fontSize = 14.sp
+                    )
+                }
             }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // ------------------------------
+            // GPS ROUTE TRACKING CARD
+            // ------------------------------
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0x44222222), RoundedCornerShape(20.dp))
+                    .padding(20.dp)
+            ) {
+
+                Column(horizontalAlignment = Alignment.Start) {
+                    Text("Track Your Route", color = TextWhite, fontSize = 18.sp)
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text("Use GPS to record your running path.", color = TextGrey, fontSize = 14.sp)
+
+                    Spacer(modifier = Modifier.height(15.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .background(YellowAccent, RoundedCornerShape(12.dp))
+                            .clickable { onStartRoute() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Start Route Tracking",
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // ------------------------------
+// POSE DETECTION CARD
+// ------------------------------
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0x44222222), RoundedCornerShape(20.dp))
+                    .padding(20.dp)
+                    .clickable { onStartPoseDetection() }
+            ) {
+
+                Column(horizontalAlignment = Alignment.Start) {
+                    Text("AI Pose Detection", color = TextWhite, fontSize = 18.sp)
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text("Track your form using ML Kit.", color = TextGrey, fontSize = 14.sp)
+                }
+            }
+
+            // ------------------------------
+            // LOGOUT BUTTON (Simple)
+            // ------------------------------
+            Text(
+                text = "Logout",
+                color = YellowAccent,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp,
+                modifier = Modifier
+                    .padding(top = 20.dp)
+                    .clickable { onLogout() }
+            )
         }
     }
 }
 
 @Composable
-fun ActivityStat(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.Start) {
+fun StatItem(label: String, value: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(label, color = TextGrey, fontSize = 14.sp)
-        Text(
-            value,
-            color = YellowAccent,
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp
-        )
+        Text(value, color = TextWhite, fontSize = 20.sp, fontWeight = FontWeight.Bold)
     }
 }

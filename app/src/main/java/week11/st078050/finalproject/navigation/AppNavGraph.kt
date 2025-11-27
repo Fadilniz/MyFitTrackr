@@ -75,11 +75,34 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
 
+        composable("steps") {
+            StepsScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable("track") {
+            RouteTrackingScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable("pose") {
+            PoseDetectionScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+
+
+
         // HOME
         composable("home") {
             HomeScreen(
-                onStartRoute = { /* later */ },
-                onStartPoseDetection = { /* later */ },
+                onStepsClick = { navController.navigate("steps") },
+                onStartRoute = { navController.navigate("track") },
+                onStartPoseDetection = { navController.navigate("pose") },
+
                 onLogout = {
                     //auth.signOut()
                     navController.navigate("login") {

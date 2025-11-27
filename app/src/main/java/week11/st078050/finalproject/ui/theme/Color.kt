@@ -2,10 +2,16 @@ package week11.st078050.finalproject.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Exact Figma colors
+val DarkPurple = Color(0xFF1C122A)
+val DarkPurple2 = Color(0xFF221632)
+val LightPurple = Color(0xFF2A203D)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val WhiteButton = Color(0xFFFFFFFF)
+val GreyInput = Color(0xFF3C3450)
+
+val YellowAccent = Color(0xFFF6E96B)
+
+val TextWhite = Color(0xFFFFFFFF)
+val TextGrey = Color(0xFFB5B4C2)
+val TextLightGrey = Color(0xFFE8E7ED)

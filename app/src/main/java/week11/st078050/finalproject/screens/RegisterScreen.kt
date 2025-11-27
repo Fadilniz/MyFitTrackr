@@ -7,13 +7,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,13 +16,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.auth.FirebaseAuth
 import week11.st078050.finalproject.ui.theme.components.GradientBackground
 import week11.st078050.finalproject.ui.theme.*
+import week11.st078050.finalproject.ui.theme.components.GradientBackground
 
 @Composable
 fun RegisterScreen(
     onBackClick: () -> Unit = {},
-    onRegisterClick: () -> Unit = {},
+    onRegisterSuccess: () -> Unit = {},
     onLoginClick: () -> Unit = {}
 ) {
     var username by remember { mutableStateOf("") }
@@ -38,6 +34,11 @@ fun RegisterScreen(
 
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
+
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    val auth = FirebaseAuth.getInstance()
 
     GradientBackground {
         Column(
@@ -193,11 +194,45 @@ fun RegisterScreen(
                     .height(55.dp)
             )
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ERROR MESSAGE
+            errorMessage?.let {
+                Text(
+                    text = it,
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             // REGISTER BUTTON
             Button(
-                onClick = onRegisterClick,
+                onClick = {
+                    errorMessage = null
+                    if (username.isBlank() || email.isBlank() || password.isBlank() || confirmPassword.isBlank()) {
+                        errorMessage = "Please fill all fields"
+                    } else if (password != confirmPassword) {
+                        errorMessage = "Passwords do not match"
+                    } else {
+                        isLoading = true
+                        auth.createUserWithEmailAndPassword(email.trim(), password)
+                            .addOnCompleteListener { task ->
+                                isLoading = false
+                                if (task.isSuccessful) {
+                                    onRegisterSuccess()
+                                } else {
+                                    errorMessage = task.exception?.message ?: "Registration failed"
+                                }
+                            }
+                    }
+                },
+                enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = WhiteButton
                 ),
@@ -206,7 +241,7 @@ fun RegisterScreen(
                     .height(55.dp)
             ) {
                 Text(
-                    text = "Register",
+                    text = if (isLoading) "Registering..." else "Register",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black

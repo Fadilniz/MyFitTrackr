@@ -25,7 +25,7 @@ fun AppNavGraph(navController: NavHostController) {
         composable("login") {
             LoginScreen(
                 onBackClick = { navController.popBackStack() },
-                onLoginClick = { /* later */ },
+              //  onLoginClick = { /* later */ },
                 onForgotPasswordClick = { navController.navigate("forgot") },
                 onRegisterClick = { navController.navigate("register") }
             )
@@ -41,7 +41,7 @@ fun AppNavGraph(navController: NavHostController) {
         composable("forgot") {
             ForgotPasswordScreen(
                 onBackClick = { navController.popBackStack() },
-                onSendClick = { navController.navigate("otp") },
+               // onSendClick = { navController.navigate("otp") },
                 onLoginClick = { navController.navigate("login") }
             )
         }

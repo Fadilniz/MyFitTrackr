@@ -16,19 +16,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.auth.FirebaseAuth
 import week11.st078050.finalproject.ui.theme.components.GradientBackground
 import week11.st078050.finalproject.ui.theme.*
+import week11.st078050.finalproject.ui.theme.components.GradientBackground
 
 @Composable
 fun LoginScreen(
     onBackClick: () -> Unit = {},
-    onLoginClick: () -> Unit = {},
+    onLoginSuccess: () -> Unit = {},
     onForgotPasswordClick: () -> Unit = {},
     onRegisterClick: () -> Unit = {}
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    val auth = FirebaseAuth.getInstance()
 
     GradientBackground {
         Column(
@@ -122,9 +128,9 @@ fun LoginScreen(
                         )
                     }
                 },
-                visualTransformation = if (passwordVisible)
-                    androidx.compose.ui.text.input.VisualTransformation.None
-                else androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                visualTransformation =
+                    if (passwordVisible) androidx.compose.ui.text.input.VisualTransformation.None
+                    else androidx.compose.ui.text.input.PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(55.dp)
@@ -141,11 +147,43 @@ fun LoginScreen(
                     .clickable { onForgotPasswordClick() }
             )
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Error text
+            errorMessage?.let {
+                Text(
+                    text = it,
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             // LOGIN BUTTON
             Button(
-                onClick = onLoginClick,
+                onClick = {
+                    errorMessage = null
+                    if (email.isBlank() || password.isBlank()) {
+                        errorMessage = "Please enter email and password"
+                    } else {
+                        isLoading = true
+                        auth.signInWithEmailAndPassword(email.trim(), password)
+                            .addOnCompleteListener { task ->
+                                isLoading = false
+                                if (task.isSuccessful) {
+                                    onLoginSuccess()
+                                } else {
+                                    errorMessage = task.exception?.message ?: "Login failed"
+                                }
+                            }
+                    }
+                },
+                enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = WhiteButton
                 ),
@@ -154,7 +192,7 @@ fun LoginScreen(
                     .height(55.dp)
             ) {
                 Text(
-                    text = "Login",
+                    text = if (isLoading) "Logging in..." else "Login",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black

@@ -68,10 +68,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
-
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
-
-
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
 }

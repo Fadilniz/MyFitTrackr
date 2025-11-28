@@ -50,8 +50,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.firebase.auth)
     implementation(libs.androidx.compose.ui.text)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -59,25 +59,19 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
     implementation("androidx.compose.material:material-icons-extended:1.7.0")
     implementation("androidx.navigation:navigation-compose:2.7.7")
 
-    // Androidx Lifecycle and ViewModel/Scope
+
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
 
-// Koin or Hilt (If you use a dependency injection tool, add it here.
-// If not, you will manually provide the Repository to the ViewModel)
-
-// Firebase Coroutines (If you haven't already added this)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
-    // Firebase Platform
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
 
-// Required for Firebase Firestore (where 'FirebaseFirestore' is defined)
-    implementation("com.google.firebase:firebase-firestore-ktx")
 
-// Required for Coroutines compatibility with Firebase tasks (.await())
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
 }

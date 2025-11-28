@@ -120,7 +120,7 @@ fun ForgotPasswordScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // SEND CODE (RESET EMAIL)
+
             Button(
                 onClick = {
                     errorMessage = null
@@ -159,7 +159,7 @@ fun ForgotPasswordScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Login link
+
             Row {
                 Text("Remember Password? ", color = TextLightGrey)
                 Text(

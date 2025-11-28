@@ -61,4 +61,23 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation("androidx.compose.material:material-icons-extended:1.7.0")
     implementation("androidx.navigation:navigation-compose:2.7.7")
+
+    // Androidx Lifecycle and ViewModel/Scope
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+
+// Koin or Hilt (If you use a dependency injection tool, add it here.
+// If not, you will manually provide the Repository to the ViewModel)
+
+// Firebase Coroutines (If you haven't already added this)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+
+    // Firebase Platform
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+
+// Required for Firebase Firestore (where 'FirebaseFirestore' is defined)
+    implementation("com.google.firebase:firebase-firestore-ktx")
+
+// Required for Coroutines compatibility with Firebase tasks (.await())
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 }

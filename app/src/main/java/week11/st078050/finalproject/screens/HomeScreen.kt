@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import week11.st078050.finalproject.ui.components.WeeklyStepsGraph
 import week11.st078050.finalproject.ui.theme.TextGrey
 import week11.st078050.finalproject.ui.theme.TextWhite
 import week11.st078050.finalproject.ui.theme.YellowAccent
@@ -27,11 +28,13 @@ fun HomeScreen(
     onStepsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {}
 ) {
-    // 🔥 Get ViewModel values (LIVE)
+
     val vm = LocalFitnessViewModel.current
+
     val steps = vm.steps.collectAsState().value
     val calories = vm.calories.collectAsState().value
     val distance = vm.distanceKm.collectAsState().value
+    val weeklySteps = vm.weeklySteps.collectAsState().value
 
     GradientBackground {
 
@@ -41,16 +44,13 @@ fun HomeScreen(
                 .padding(20.dp)
         ) {
 
-            // ----------------------------
             // HEADER
-            // ----------------------------
             Text(
                 text = "Hi, User!",
                 color = TextWhite,
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Bold
             )
-
             Text(
                 text = "Welcome back!",
                 color = TextGrey,
@@ -59,13 +59,8 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(25.dp))
 
-            // ----------------------------
-            // PROFILE BUTTON
-            // ----------------------------
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
                 Text(
@@ -77,12 +72,14 @@ fun HomeScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
+            // WEEKLY STEPS GRAPH
+            WeeklyStepsGraph(stepsList = weeklySteps)
 
-            // ----------------------------
-            // TODAY'S ACTIVITY (LIVE STATS)
-            // ----------------------------
+            Spacer(modifier = Modifier.height(25.dp))
+
+            // TODAY'S ACTIVITY
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -107,10 +104,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-
-            // ----------------------------
-            // LIVE STEP COUNTER CARD
-            // ----------------------------
+            // STEP COUNTER
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -119,43 +113,28 @@ fun HomeScreen(
                     .clickable { onStepsClick() }
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
-                    Text(
-                        text = "Live Step Counter",
-                        color = TextWhite,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
+                    Text("Live Step Counter", color = TextWhite, fontSize = 18.sp)
                     Spacer(modifier = Modifier.height(12.dp))
-
                     Text(
                         text = steps.toString(),
                         color = YellowAccent,
                         fontSize = 48.sp,
                         fontWeight = FontWeight.Bold
                     )
-
-                    Text(
-                        text = "Steps Today",
-                        color = TextGrey,
-                        fontSize = 14.sp
-                    )
+                    Text("Steps Today", color = TextGrey, fontSize = 14.sp)
                 }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-
-            // ----------------------------
-            // GPS ROUTE TRACKING CARD
-            // ----------------------------
+            // ROUTE TRACKING
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color(0x44222222), RoundedCornerShape(20.dp))
                     .padding(20.dp)
             ) {
+
                 Column {
                     Text("Track Your Route", color = TextWhite, fontSize = 18.sp)
                     Spacer(modifier = Modifier.height(10.dp))
@@ -174,8 +153,8 @@ fun HomeScreen(
                         Text(
                             text = "Start Route Tracking",
                             color = Color.Black,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -183,10 +162,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-
-            // ----------------------------
-            // POSE DETECTION CARD
-            // ----------------------------
+            // POSE DETECTION
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -194,6 +170,7 @@ fun HomeScreen(
                     .padding(20.dp)
                     .clickable { onStartPoseDetection() }
             ) {
+
                 Column {
                     Text("AI Pose Detection", color = TextWhite, fontSize = 18.sp)
                     Spacer(modifier = Modifier.height(10.dp))
@@ -201,12 +178,8 @@ fun HomeScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-
-            // ----------------------------
-            // LOGOUT
-            // ----------------------------
             Text(
                 text = "Logout",
                 color = YellowAccent,
@@ -217,7 +190,6 @@ fun HomeScreen(
         }
     }
 }
-
 
 @Composable
 fun StatItem(label: String, value: String) {

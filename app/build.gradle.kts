@@ -72,10 +72,6 @@ dependencies {
 
 
 // Location
-    implementation("com.google.android.gms:play-services-location:21.3.0")
 
-// Google Maps + Maps Compose
-    implementation("com.google.android.libraries.maps:maps:3.5.0")
-    implementation("com.google.maps.android:maps-compose:4.3.3")
 
 }

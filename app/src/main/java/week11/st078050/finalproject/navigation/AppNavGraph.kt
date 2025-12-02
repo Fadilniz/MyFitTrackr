@@ -120,6 +120,12 @@ fun AppNavGraph(navController: NavHostController) {
                 onBackClick = { navController.popBackStack() }
             )
         }
+        composable("sensorDashboard") {
+            SensorDashboardScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
 
 
 

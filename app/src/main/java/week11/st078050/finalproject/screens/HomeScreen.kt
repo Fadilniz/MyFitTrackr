@@ -27,10 +27,7 @@ fun HomeScreen(
     onStepsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {}
 ) {
-
-    // -------------------------
-    // ⭐ GET LIVE VALUES FROM VIEWMODEL
-    // -------------------------
+    // 🔥 Get ViewModel values (LIVE)
     val vm = LocalFitnessViewModel.current
     val steps = vm.steps.collectAsState().value
     val calories = vm.calories.collectAsState().value
@@ -44,13 +41,16 @@ fun HomeScreen(
                 .padding(20.dp)
         ) {
 
-            // Header
+            // ----------------------------
+            // HEADER
+            // ----------------------------
             Text(
                 text = "Hi, User!",
                 color = TextWhite,
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Bold
             )
+
             Text(
                 text = "Welcome back!",
                 color = TextGrey,
@@ -59,7 +59,9 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(25.dp))
 
-            // PROFILE BUTTON (TOP RIGHT)
+            // ----------------------------
+            // PROFILE BUTTON
+            // ----------------------------
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -75,12 +77,12 @@ fun HomeScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
 
-            // ------------------------------
-            // TODAY'S ACTIVITY CARD (LIVE STATS)
-            // ------------------------------
+            // ----------------------------
+            // TODAY'S ACTIVITY (LIVE STATS)
+            // ----------------------------
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -93,8 +95,8 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         StatItem("Steps", steps.toString())
                         StatItem("Calories", String.format("%.0f kcal", calories))
@@ -106,9 +108,9 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
 
-            // ------------------------------
+            // ----------------------------
             // LIVE STEP COUNTER CARD
-            // ------------------------------
+            // ----------------------------
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -145,17 +147,16 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
 
-            // ------------------------------
+            // ----------------------------
             // GPS ROUTE TRACKING CARD
-            // ------------------------------
+            // ----------------------------
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color(0x44222222), RoundedCornerShape(20.dp))
                     .padding(20.dp)
             ) {
-
-                Column(horizontalAlignment = Alignment.Start) {
+                Column {
                     Text("Track Your Route", color = TextWhite, fontSize = 18.sp)
                     Spacer(modifier = Modifier.height(10.dp))
                     Text("Use GPS to record your running path.", color = TextGrey, fontSize = 14.sp)
@@ -183,9 +184,9 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
 
-            // ------------------------------
+            // ----------------------------
             // POSE DETECTION CARD
-            // ------------------------------
+            // ----------------------------
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -193,29 +194,30 @@ fun HomeScreen(
                     .padding(20.dp)
                     .clickable { onStartPoseDetection() }
             ) {
-
-                Column(horizontalAlignment = Alignment.Start) {
+                Column {
                     Text("AI Pose Detection", color = TextWhite, fontSize = 18.sp)
                     Spacer(modifier = Modifier.height(10.dp))
                     Text("Track your form using ML Kit.", color = TextGrey, fontSize = 14.sp)
                 }
             }
 
-            // ------------------------------
-            // LOGOUT BUTTON (Simple)
-            // ------------------------------
+            Spacer(modifier = Modifier.height(30.dp))
+
+
+            // ----------------------------
+            // LOGOUT
+            // ----------------------------
             Text(
                 text = "Logout",
                 color = YellowAccent,
-                fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
-                modifier = Modifier
-                    .padding(top = 20.dp)
-                    .clickable { onLogout() }
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.clickable { onLogout() }
             )
         }
     }
 }
+
 
 @Composable
 fun StatItem(label: String, value: String) {

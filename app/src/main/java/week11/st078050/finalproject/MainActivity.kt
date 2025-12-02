@@ -9,7 +9,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import week11.st078050.finalproject.navigation.AppNavGraph
 import week11.st078050.finalproject.ui.theme.MyFitTrackrTheme
-import week11.st078050.finalproject.viewmodel.FitnessViewModel
+import week11.st078050.finalproject.data.repository.FitnessViewModel
 import week11.st078050.finalproject.viewmodel.LocalFitnessViewModel
 
 class MainActivity : ComponentActivity() {

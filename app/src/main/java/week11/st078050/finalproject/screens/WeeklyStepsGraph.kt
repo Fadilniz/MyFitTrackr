@@ -1,4 +1,4 @@
-package week11.st078050.finalproject.ui.components
+package week11.st078050.finalproject.screens
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas

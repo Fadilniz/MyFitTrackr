@@ -1,13 +1,14 @@
-package week11.st078050.finalproject.viewmodel
+package week11.st078050.finalproject.data.repository
 
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import java.util.Calendar
 
 class FitnessViewModel : ViewModel() {
 
-    // -------- LIVE STATS --------
+    // -----------------------------
+    // LIVE READINGS
+    // -----------------------------
     private val _steps = MutableStateFlow(0)
     val steps: StateFlow<Int> = _steps
 
@@ -17,37 +18,34 @@ class FitnessViewModel : ViewModel() {
     private val _distanceKm = MutableStateFlow(0.0)
     val distanceKm: StateFlow<Double> = _distanceKm
 
-    // -------- WEEKLY GRAPH DATA --------
-    private val _weeklySteps = MutableStateFlow(
-        listOf(1200, 3450, 2890, 5000, 4200, 1500, 0) // sample initial data
-    )
-    val weeklySteps: StateFlow<List<Int>> = _weeklySteps
+    // -----------------------------
+    // USER GOALS
+    // -----------------------------
+    private val dailyStepGoal = 10000
+    private val calorieGoal = 400.0
+    private val distanceGoal = 6.0
 
-    /** Called whenever StepsScreen updates steps */
+    // -----------------------------
+    // LIVE PROGRESS FOR RINGS
+    // -----------------------------
+    val stepProgress = MutableStateFlow(0f)
+    val calorieProgress = MutableStateFlow(0f)
+    val distanceProgress = MutableStateFlow(0f)
+
+    // Called from StepSensorListener
     fun updateSteps(newSteps: Int) {
         _steps.value = newSteps
-        _distanceKm.value = newSteps * 0.0008
-        _calories.value = newSteps * 0.04
 
-        updateTodaySteps(newSteps)
-    }
+        _distanceKm.value = newSteps * 0.0008          // 1 step ≈ 0.8m
+        _calories.value = newSteps * 0.04              // simple kcal formula
 
-    /** Stores today's step value in the weekly list */
-    private fun updateTodaySteps(todaySteps: Int) {
-        val calendar = Calendar.getInstance()
-        val dayIndex = when (calendar.get(Calendar.DAY_OF_WEEK)) {
-            Calendar.MONDAY -> 0
-            Calendar.TUESDAY -> 1
-            Calendar.WEDNESDAY -> 2
-            Calendar.THURSDAY -> 3
-            Calendar.FRIDAY -> 4
-            Calendar.SATURDAY -> 5
-            Calendar.SUNDAY -> 6
-            else -> 0
-        }
+        stepProgress.value =
+            (newSteps / dailyStepGoal.toFloat()).coerceIn(0f, 1f)
 
-        val updated = _weeklySteps.value.toMutableList()
-        updated[dayIndex] = todaySteps
-        _weeklySteps.value = updated
+        calorieProgress.value =
+            (_calories.value / calorieGoal).toFloat().coerceIn(0f, 1f)
+
+        distanceProgress.value =
+            (_distanceKm.value / distanceGoal).toFloat().coerceIn(0f, 1f)
     }
 }

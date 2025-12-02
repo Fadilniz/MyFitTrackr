@@ -19,6 +19,9 @@ import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import week11.st078050.finalproject.ui.theme.components.GradientBackground
 import week11.st078050.finalproject.ui.theme.*
+import com.google.firebase.firestore.FirebaseFirestore
+import week11.st078050.finalproject.data.model.User
+
 
 @Composable
 fun RegisterScreen(
@@ -38,6 +41,8 @@ fun RegisterScreen(
     var isLoading by remember { mutableStateOf(false) }
 
     val auth = FirebaseAuth.getInstance()
+    val firestore = FirebaseFirestore.getInstance()
+
 
     GradientBackground {
         Column(
@@ -222,13 +227,41 @@ fun RegisterScreen(
                         isLoading = true
                         auth.createUserWithEmailAndPassword(email.trim(), password)
                             .addOnCompleteListener { task ->
-                                isLoading = false
                                 if (task.isSuccessful) {
-                                    onRegisterSuccess()
+                                    // ✅ 1. Get the UID
+                                    val firebaseUser = auth.currentUser
+                                    val uid = firebaseUser?.uid
+
+                                    if (uid != null) {
+                                        // ✅ 2. Build our User object
+                                        val userProfile = User(
+                                            uid = uid,
+                                            username = username.trim(),
+                                            email = email.trim()
+                                        )
+
+                                        // ✅ 3. Save to Firestore: users/{uid}
+                                        firestore.collection("users")
+                                            .document(uid)
+                                            .set(userProfile)
+                                            .addOnSuccessListener {
+                                                isLoading = false
+                                                onRegisterSuccess()
+                                            }
+                                            .addOnFailureListener { e ->
+                                                isLoading = false
+                                                errorMessage = e.message ?: "Failed to save profile"
+                                            }
+                                    } else {
+                                        isLoading = false
+                                        errorMessage = "Registration succeeded but UID is null"
+                                    }
                                 } else {
+                                    isLoading = false
                                     errorMessage = task.exception?.message ?: "Registration failed"
                                 }
                             }
+
                     }
                 },
                 enabled = !isLoading,

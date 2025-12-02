@@ -22,7 +22,9 @@ fun HomeScreen(
     onStartRoute: () -> Unit = {},
     onStartPoseDetection: () -> Unit = {},
     onLogout: () -> Unit = {},
-    onStepsClick: () -> Unit = {} // ADDED HANDLER
+    onStepsClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {}
+
 ) {
 
     GradientBackground {
@@ -47,6 +49,24 @@ fun HomeScreen(
             )
 
             Spacer(modifier = Modifier.height(25.dp))
+            // PROFILE BUTTON (TOP RIGHT)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text(
+                    text = "Profile",
+                    color = YellowAccent,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.clickable { onProfileClick() }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
 
             // ------------------------------
             // TODAY'S ACTIVITY CARD

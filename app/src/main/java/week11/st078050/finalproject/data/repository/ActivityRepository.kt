@@ -23,8 +23,7 @@ class ActivityRepository(private val firestore: FirebaseFirestore) {
         }
     }
 
-    // --- 5b: Read data (real-time) ---
-    // Uses Kotlin Flow for real-time updates as required
+
     fun getTodaySteps(userId: String): Flow<Int> = flow {
         // ... Firestore logic to listen for step updates and emit them ...
         // For now, emit a placeholder:

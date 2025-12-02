@@ -8,6 +8,8 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
+import android.speech.tts.TextToSpeech
+import java.util.Locale
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
@@ -46,9 +48,36 @@ fun StepsScreen(
     val vm = LocalFitnessViewModel.current   // <-- GLOBAL VIEWMODEL
 
     // STATE
+    // STATE
     var steps by remember { mutableStateOf(0) }
     var hasSensor by remember { mutableStateOf(true) }
     var hasPermission by remember { mutableStateOf(false) }
+
+    // Text-to-Speech for voice alerts
+    var textToSpeech by remember { mutableStateOf<TextToSpeech?>(null) }
+    var hasSpoken100 by remember { mutableStateOf(false) }
+
+    DisposableEffect(Unit) {
+        // Create TextToSpeech instance
+        val tts = TextToSpeech(context) { status ->
+            // You can log status here if you want, but we don't need tts inside
+            // this lambda anymore, so no error.
+        }
+
+        // Set language *after* creating it
+        tts.language = Locale.US
+
+        textToSpeech = tts
+
+        onDispose {
+            tts.stop()
+            tts.shutdown()
+        }
+    }
+
+
+    // PERMISSION
+
 
     // PERMISSION
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -130,6 +159,24 @@ fun StepsScreen(
                     onSensorAvailability = { hasSensor = it }
                 )
             }
+            // Voice alert when user reaches 100 steps
+            LaunchedEffect(steps) {
+                if (steps >= 100 && !hasSpoken100) {
+                    textToSpeech?.speak(
+                        "You have walked $steps steps today",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "steps-tts"
+                    )
+                    hasSpoken100 = true
+                }
+
+                // Reset flag if steps go below 100 (optional, lets it trigger again)
+                if (steps < 100) {
+                    hasSpoken100 = false
+                }
+            }
+
 
             // CIRCLE UI
             Box(contentAlignment = Alignment.Center) {

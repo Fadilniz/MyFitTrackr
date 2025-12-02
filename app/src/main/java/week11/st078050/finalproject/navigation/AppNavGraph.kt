@@ -5,6 +5,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import week11.st078050.finalproject.screens.*
+import week11.st078050.finalproject.screens.ProfileScreen
+
 
 @Composable
 fun AppNavGraph(navController: NavHostController) {
@@ -97,19 +99,29 @@ fun AppNavGraph(navController: NavHostController) {
 
 
         // HOME
+        // HOME
         composable("home") {
             HomeScreen(
                 onStepsClick = { navController.navigate("steps") },
                 onStartRoute = { navController.navigate("track") },
                 onStartPoseDetection = { navController.navigate("pose") },
-
                 onLogout = {
                     //auth.signOut()
                     navController.navigate("login") {
                         popUpTo("home") { inclusive = true }
                     }
-                }
+                },
+                onProfileClick = { navController.navigate("profile") } // 🔹 NEW
             )
         }
+        // PROFILE
+        composable("profile") {
+            ProfileScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+
+
     }
 }

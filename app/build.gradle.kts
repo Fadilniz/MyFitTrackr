@@ -69,4 +69,13 @@ dependencies {
 
     implementation("androidx.compose.material:material-icons-extended:1.7.0")
     implementation("androidx.navigation:navigation-compose:2.7.7")
-        }
+
+
+// Location
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+
+// Google Maps + Maps Compose
+    implementation("com.google.android.libraries.maps:maps:3.5.0")
+    implementation("com.google.maps.android:maps-compose:4.3.3")
+
+}

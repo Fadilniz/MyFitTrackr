@@ -1,4 +1,4 @@
-package week11.st078050.finalproject.screens
+    package week11.st078050.finalproject.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

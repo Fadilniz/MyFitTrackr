@@ -1,4 +1,4 @@
-    package week11.st078050.finalproject.screens
+package week11.st078050.finalproject.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -16,6 +17,7 @@ import week11.st078050.finalproject.ui.theme.TextGrey
 import week11.st078050.finalproject.ui.theme.TextWhite
 import week11.st078050.finalproject.ui.theme.YellowAccent
 import week11.st078050.finalproject.ui.theme.components.GradientBackground
+import week11.st078050.finalproject.viewmodel.LocalFitnessViewModel
 
 @Composable
 fun HomeScreen(
@@ -24,8 +26,15 @@ fun HomeScreen(
     onLogout: () -> Unit = {},
     onStepsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {}
-
 ) {
+
+    // -------------------------
+    // ⭐ GET LIVE VALUES FROM VIEWMODEL
+    // -------------------------
+    val vm = LocalFitnessViewModel.current
+    val steps = vm.steps.collectAsState().value
+    val calories = vm.calories.collectAsState().value
+    val distance = vm.distanceKm.collectAsState().value
 
     GradientBackground {
 
@@ -49,6 +58,7 @@ fun HomeScreen(
             )
 
             Spacer(modifier = Modifier.height(25.dp))
+
             // PROFILE BUTTON (TOP RIGHT)
             Row(
                 modifier = Modifier
@@ -69,7 +79,7 @@ fun HomeScreen(
 
 
             // ------------------------------
-            // TODAY'S ACTIVITY CARD
+            // TODAY'S ACTIVITY CARD (LIVE STATS)
             // ------------------------------
             Box(
                 modifier = Modifier
@@ -86,17 +96,18 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        StatItem("Steps", "5420")
-                        StatItem("Calories", "220 kcal")
-                        StatItem("Distance", "3.9 km")
+                        StatItem("Steps", steps.toString())
+                        StatItem("Calories", String.format("%.0f kcal", calories))
+                        StatItem("Distance", String.format("%.2f km", distance))
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
+
             // ------------------------------
-            // STEP COUNTER CARD (Clickable)
+            // LIVE STEP COUNTER CARD
             // ------------------------------
             Box(
                 modifier = Modifier
@@ -117,7 +128,7 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "5420",
+                        text = steps.toString(),
                         color = YellowAccent,
                         fontSize = 48.sp,
                         fontWeight = FontWeight.Bold
@@ -132,6 +143,7 @@ fun HomeScreen(
             }
 
             Spacer(modifier = Modifier.height(20.dp))
+
 
             // ------------------------------
             // GPS ROUTE TRACKING CARD
@@ -170,9 +182,10 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
+
             // ------------------------------
-// POSE DETECTION CARD
-// ------------------------------
+            // POSE DETECTION CARD
+            // ------------------------------
             Box(
                 modifier = Modifier
                     .fillMaxWidth()

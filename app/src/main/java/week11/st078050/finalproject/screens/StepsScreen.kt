@@ -36,31 +36,27 @@ import week11.st078050.finalproject.ui.theme.TextGrey
 import week11.st078050.finalproject.ui.theme.TextWhite
 import week11.st078050.finalproject.ui.theme.YellowAccent
 import week11.st078050.finalproject.ui.theme.components.GradientBackground
+import week11.st078050.finalproject.viewmodel.LocalFitnessViewModel
 
 @Composable
 fun StepsScreen(
     onBackClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val vm = LocalFitnessViewModel.current   // <-- GLOBAL VIEWMODEL
 
-    // --- STATE ---
+    // STATE
     var steps by remember { mutableStateOf(0) }
     var hasSensor by remember { mutableStateOf(true) }
     var hasPermission by remember { mutableStateOf(false) }
 
-    // --- DISTANCE + CALORIE FORMULAS ---
-    val strideLength = 0.78 // meters
-    val distanceKm = (steps * strideLength) / 1000
-    val caloriesBurned = steps * 0.04
-
-    // --- PERMISSION LAUNCHER ---
+    // PERMISSION
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
         hasPermission = granted
     }
 
-    // Request permission once
     LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             hasPermission = true
@@ -123,16 +119,19 @@ fun StepsScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // Start sensor listening when permission granted
+            // SENSOR LISTENER
             if (hasPermission) {
                 StepSensorListener(
                     context = context,
-                    onStepsChanged = { steps = it },
+                    onStepsChanged = {
+                        steps = it
+                        vm.updateSteps(it)   // <-- UPDATE VIEWMODEL
+                    },
                     onSensorAvailability = { hasSensor = it }
                 )
             }
 
-            // Circular progress UI
+            // CIRCLE UI
             Box(contentAlignment = Alignment.Center) {
                 Canvas(modifier = Modifier.size(200.dp)) {
                     drawArc(
@@ -168,21 +167,10 @@ fun StepsScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(30.dp))
-
-            // Updated stats row (Distance + Calories)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                StatBox("Distance", String.format("%.2f km", distanceKm))
-                StatBox("Calories", String.format("%.0f kcal", caloriesBurned))
-            }
-
             Spacer(modifier = Modifier.height(40.dp))
 
             Button(
-                onClick = { /* Future logic here */ },
+                onClick = { /* future logic */ },
                 colors = ButtonDefaults.buttonColors(containerColor = YellowAccent),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -201,14 +189,6 @@ fun StepsScreen(
 }
 
 @Composable
-private fun StatBox(label: String, value: String) {
-    Column {
-        Text(label, color = TextGrey, fontSize = 14.sp)
-        Text(value, color = TextWhite, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-    }
-}
-
-@Composable
 private fun StepSensorListener(
     context: Context,
     onStepsChanged: (Int) -> Unit,
@@ -218,7 +198,7 @@ private fun StepSensorListener(
 
     DisposableEffect(Unit) {
         val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        val stepSensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+        val stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
 
         if (stepSensor == null) {
             onSensorAvailability(false)
@@ -229,7 +209,6 @@ private fun StepSensorListener(
             val listener = object : SensorEventListener {
                 override fun onSensorChanged(event: SensorEvent) {
                     val total = event.values[0]
-
                     if (baseStep < 0f) baseStep = total
 
                     val diff = total - baseStep

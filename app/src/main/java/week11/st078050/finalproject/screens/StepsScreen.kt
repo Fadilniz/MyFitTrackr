@@ -48,17 +48,21 @@ fun StepsScreen(
     var hasSensor by remember { mutableStateOf(true) }
     var hasPermission by remember { mutableStateOf(false) }
 
-    // --- PERMISSION LAUNCHER (for ACTIVITY_RECOGNITION) ---
+    // --- DISTANCE + CALORIE FORMULAS ---
+    val strideLength = 0.78 // meters
+    val distanceKm = (steps * strideLength) / 1000
+    val caloriesBurned = steps * 0.04
+
+    // --- PERMISSION LAUNCHER ---
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
         hasPermission = granted
     }
 
-    // Check permission once when screen opens
+    // Request permission once
     LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            // Before Android 10, no special permission needed
             hasPermission = true
         } else {
             val granted = ContextCompat.checkSelfPermission(
@@ -66,17 +70,9 @@ fun StepsScreen(
                 Manifest.permission.ACTIVITY_RECOGNITION
             ) == PackageManager.PERMISSION_GRANTED
 
-            if (granted) {
-                hasPermission = true
-            } else {
-                permissionLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION)
-            }
+            if (granted) hasPermission = true
+            else permissionLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION)
         }
-    }
-
-    // --- SENSOR LOGIC ---
-    LaunchedEffect(hasPermission) {
-        // Just triggers recomposition when permission changes
     }
 
     GradientBackground {
@@ -116,35 +112,29 @@ fun StepsScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = if (!hasPermission)
-                    "Waiting for activity permission..."
-                else if (!hasSensor)
-                    "Step counter sensor not available on this device."
-                else
-                    "Walk with your phone to see live steps.",
+                text = when {
+                    !hasPermission -> "Waiting for activity permission..."
+                    !hasSensor -> "Step counter sensor not available on this device."
+                    else -> "Walk with your phone to see live steps."
+                },
                 color = TextGrey,
                 fontSize = 14.sp
             )
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // --- Start sensor listening only when we have permission ---
+            // Start sensor listening when permission granted
             if (hasPermission) {
                 StepSensorListener(
                     context = context,
-                    onStepsChanged = { newSteps ->
-                        steps = newSteps
-                    },
-                    onSensorAvailability = { available ->
-                        hasSensor = available
-                    }
+                    onStepsChanged = { steps = it },
+                    onSensorAvailability = { hasSensor = it }
                 )
             }
 
             // Circular progress UI
             Box(contentAlignment = Alignment.Center) {
                 Canvas(modifier = Modifier.size(200.dp)) {
-                    // Background arc
                     drawArc(
                         color = Color(0x44FFFFFF),
                         startAngle = -90f,
@@ -153,7 +143,6 @@ fun StepsScreen(
                         style = Stroke(width = 18.dp.toPx(), cap = StrokeCap.Round)
                     )
 
-                    // Fake progress (just for visuals)
                     val progress = (steps.coerceAtMost(10000) / 10000f) * 360f
                     drawArc(
                         color = YellowAccent,
@@ -181,19 +170,19 @@ fun StepsScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // Simple stats row (will connect more logic later)
+            // Updated stats row (Distance + Calories)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                StatBox("Goal", "10,000")
-                StatBox("Progress", "${steps.coerceAtMost(10000) / 100}%")
+                StatBox("Distance", String.format("%.2f km", distanceKm))
+                StatBox("Calories", String.format("%.0f kcal", caloriesBurned))
             }
 
             Spacer(modifier = Modifier.height(40.dp))
 
             Button(
-                onClick = { /* later: reset / start pause logic */ },
+                onClick = { /* Future logic here */ },
                 colors = ButtonDefaults.buttonColors(containerColor = YellowAccent),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -219,17 +208,12 @@ private fun StatBox(label: String, value: String) {
     }
 }
 
-/**
- * Listens to the TYPE_STEP_COUNTER sensor and calls onStepsChanged with
- * the number of steps taken since this composable started.
- */
 @Composable
 private fun StepSensorListener(
     context: Context,
     onStepsChanged: (Int) -> Unit,
     onSensorAvailability: (Boolean) -> Unit
 ) {
-    // We keep baseStep as the first reading, so we only count "new" steps
     var baseStep by remember { mutableStateOf(-1f) }
 
     DisposableEffect(Unit) {
@@ -244,14 +228,12 @@ private fun StepSensorListener(
 
             val listener = object : SensorEventListener {
                 override fun onSensorChanged(event: SensorEvent) {
-                    val totalSinceBoot = event.values[0] // float
-                    if (baseStep < 0f) {
-                        baseStep = totalSinceBoot // first reading as baseline
-                    }
-                    val diff = totalSinceBoot - baseStep
-                    if (diff >= 0) {
-                        onStepsChanged(diff.toInt())
-                    }
+                    val total = event.values[0]
+
+                    if (baseStep < 0f) baseStep = total
+
+                    val diff = total - baseStep
+                    if (diff >= 0) onStepsChanged(diff.toInt())
                 }
 
                 override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}

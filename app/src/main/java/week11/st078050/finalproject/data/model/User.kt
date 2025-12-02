@@ -6,4 +6,8 @@ data class User(
     val username: String = "",
     val email: String = "",
 
+    // New optional profile fields
+    val heightCm: Int = 0,      // 0 = not set
+    val weightKg: Int = 0,      // 0 = not set
+    val stepGoal: Int = 0       // 0 = not set
 )

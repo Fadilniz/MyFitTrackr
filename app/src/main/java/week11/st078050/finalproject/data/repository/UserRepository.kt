@@ -25,7 +25,34 @@ class UserRepository(
         return snapshot.toObject(User::class.java)
     }
 
-    // 🔹 Update username for current user , and from
+    // 🔹 Update full profile (username + height + weight + step goal)
+    suspend fun updateProfile(
+        username: String,
+        heightCm: Int,
+        weightKg: Int,
+        stepGoal: Int
+    ): Boolean {
+        val uid = currentUserId() ?: return false
+
+        val updates = mapOf(
+            "username" to username,
+            "heightCm" to heightCm,
+            "weightKg" to weightKg,
+            "stepGoal" to stepGoal
+        )
+
+        return try {
+            firestore.collection("users")
+                .document(uid)
+                .update(updates)
+                .await()
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    // 🔹 Update only username (if some part of app needs it)
     suspend fun updateUsername(newUsername: String): Boolean {
         val uid = currentUserId() ?: return false
 

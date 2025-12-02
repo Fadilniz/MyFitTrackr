@@ -2,6 +2,7 @@ package week11.st078050.finalproject.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -10,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,19 +36,29 @@ fun ProfileScreen(
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
 
+    // New editable fields
+    var heightText by remember { mutableStateOf("") }   // in cm
+    var weightText by remember { mutableStateOf("") }   // in kg
+    var stepGoalText by remember { mutableStateOf("") } // daily steps
+
     var isLoading by remember { mutableStateOf(true) }
     var isSaving by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
 
     val scope = rememberCoroutineScope()
 
-    // 🔹 Load profile when screen opens and also
+    // 🔹 Load profile when screen opens
     LaunchedEffect(Unit) {
         try {
             val profile = repository.getCurrentUserProfile()
             if (profile != null) {
                 username = profile.username
                 email = profile.email
+
+                // Pre-fill numeric fields if they have values
+                if (profile.heightCm > 0) heightText = profile.heightCm.toString()
+                if (profile.weightKg > 0) weightText = profile.weightKg.toString()
+                if (profile.stepGoal > 0) stepGoalText = profile.stepGoal.toString()
             } else {
                 message = "No profile found."
             }
@@ -142,9 +154,63 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
+                        // Height
+                        Text(
+                            text = "Height (cm)",
+                            color = TextGrey,
+                            fontSize = 14.sp
+                        )
+                        OutlinedTextField(
+                            value = heightText,
+                            onValueChange = { heightText = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Weight
+                        Text(
+                            text = "Weight (kg)",
+                            color = TextGrey,
+                            fontSize = 14.sp
+                        )
+                        OutlinedTextField(
+                            value = weightText,
+                            onValueChange = { weightText = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Daily Step Goal
+                        Text(
+                            text = "Daily Step Goal",
+                            color = TextGrey,
+                            fontSize = 14.sp
+                        )
+                        OutlinedTextField(
+                            value = stepGoalText,
+                            onValueChange = { stepGoalText = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
                         // Info text
                         Text(
-                            text = "You can update your username. Email is linked to your Firebase account.",
+                            text = "Update your profile details. Height, weight and daily step goal help personalize your fitness stats.",
                             color = TextLightGrey,
                             fontSize = 13.sp
                         )
@@ -155,12 +221,23 @@ fun ProfileScreen(
                         Button(
                             onClick = {
                                 message = null
+
                                 if (username.isBlank()) {
                                     message = "Username cannot be empty."
                                 } else {
+                                    // Safely parse numbers (blank or invalid = 0)
+                                    val height = heightText.toIntOrNull() ?: 0
+                                    val weight = weightText.toIntOrNull() ?: 0
+                                    val stepGoal = stepGoalText.toIntOrNull() ?: 0
+
                                     isSaving = true
                                     scope.launch {
-                                        val success = repository.updateUsername(username.trim())
+                                        val success = repository.updateProfile(
+                                            username = username.trim(),
+                                            heightCm = height,
+                                            weightKg = weight,
+                                            stepGoal = stepGoal
+                                        )
                                         isSaving = false
                                         message = if (success) {
                                             "Profile updated successfully."

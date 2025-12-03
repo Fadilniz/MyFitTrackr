@@ -1,13 +1,14 @@
 package week11.st078050.finalproject.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import week11.st078050.finalproject.screens.*
-import week11.st078050.finalproject.screens.ProfileScreen
 
-
+@RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Composable
 fun AppNavGraph(navController: NavHostController) {
 
@@ -29,7 +30,9 @@ fun AppNavGraph(navController: NavHostController) {
         composable("login") {
             LoginScreen(
                 onBackClick = { navController.popBackStack() },
-                onLoginClick = { navController.navigate("home") },
+                onLoginClick = {
+                    navController.navigate("home")
+                },
                 onForgotPasswordClick = { navController.navigate("forgot") },
                 onRegisterClick = { navController.navigate("register") }
             )
@@ -39,7 +42,9 @@ fun AppNavGraph(navController: NavHostController) {
         composable("register") {
             RegisterScreen(
                 onBackClick = { navController.popBackStack() },
-                onRegisterSuccess = { navController.navigate("home") },
+                onRegisterSuccess = {
+                    navController.navigate("home")
+                },
                 onLoginClick = { navController.navigate("login") }
             )
         }
@@ -77,28 +82,27 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
 
+        // DAILY STEPS DETAIL
         composable("steps") {
             StepsScreen(
                 onBackClick = { navController.popBackStack() }
             )
         }
 
+        // ROUTE TRACKING
         composable("track") {
             RouteTrackingScreen(
                 onBackClick = { navController.popBackStack() }
             )
         }
 
+        // POSE DETECTION
         composable("pose") {
             PoseDetectionScreen(
                 onBackClick = { navController.popBackStack() }
             )
         }
 
-
-
-
-        // HOME
         // HOME
         composable("home") {
             HomeScreen(
@@ -106,28 +110,28 @@ fun AppNavGraph(navController: NavHostController) {
                 onStartRoute = { navController.navigate("track") },
                 onStartPoseDetection = { navController.navigate("pose") },
                 onLogout = {
-                    //auth.signOut()
+                    // FirebaseAuth.getInstance().signOut()  // if you want
                     navController.navigate("login") {
                         popUpTo("home") { inclusive = true }
                     }
                 },
-                onProfileClick = { navController.navigate("profile") } // 🔹 NEW
+                onProfileClick = { navController.navigate("profile") },
+                onSensorDashboardClick = { navController.navigate("sensorDashboard") }
             )
         }
+
         // PROFILE
         composable("profile") {
             ProfileScreen(
                 onBackClick = { navController.popBackStack() }
             )
         }
+
+        // SENSOR DASHBOARD
         composable("sensorDashboard") {
             SensorDashboardScreen(
                 onBackClick = { navController.popBackStack() }
             )
         }
-
-
-
-
     }
 }

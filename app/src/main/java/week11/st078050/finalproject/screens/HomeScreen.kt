@@ -72,17 +72,7 @@ fun HomeScreen(
             // WEEKLY GRAPH (REAL DATA)
             WeeklyStepsGraph(stepsList = weeklySteps.values.toList())
             // 🔹 Weekly Steps Graph
-            WeeklyStepsGraph(
-                stepsList = listOf(
-                    steps,
-                    (steps * 0.8f).toInt(),
-                    (steps * 0.6f).toInt(),
-                    (steps * 1.1f).toInt(),
-                    (steps * 0.9f).toInt(),
-                    (steps * 0.4f).toInt(),
-                    (steps * 0.3f).toInt()
-                )
-            )
+
 
             Spacer(Modifier.height(20.dp))
 
@@ -125,7 +115,7 @@ fun HomeScreen(
                     .clickable { onStepsClick() }
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Live Step Counter", color = TextWhite, fontSize = 18.sp)
+
                     Text(
                         "Live Step Counter",
                         color = TextWhite,

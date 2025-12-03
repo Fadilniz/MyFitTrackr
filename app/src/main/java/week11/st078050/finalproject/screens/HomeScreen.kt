@@ -45,61 +45,18 @@ fun HomeScreen(
     val calories = vm.calories.collectAsState().value
     val distance = vm.distanceKm.collectAsState().value
 
-    // 🔹 real weekly data from ViewModel (friend’s code)
-    val weeklySteps = vm.weeklySteps.collectAsState().value
-
     val stepProg = vm.stepProgress.collectAsState().value
     val calorieProg = vm.calorieProgress.collectAsState().value
     val distanceProg = vm.distanceProgress.collectAsState().value
 
-<<<<<<< HEAD
-    // 🔹 User info for greeting + profile picture (your code)
-    val auth = remember { FirebaseAuth.getInstance() }
-    val firestore = remember { FirebaseFirestore.getInstance() }
-
-    var userName by remember { mutableStateOf("User") }
-    var photoUrl by remember { mutableStateOf("") }
-
-    LaunchedEffect(Unit) {
-        try {
-            val uid = auth.currentUser?.uid ?: return@LaunchedEffect
-
-            val snapshot = firestore
-                .collection("users")
-                .document(uid)
-                .get()
-                .await()
-
-            val user = snapshot.toObject(User::class.java)
-            if (user != null) {
-                if (user.username.isNotBlank()) {
-                    userName = user.username
-                }
-                photoUrl = user.photoUrl
-            }
-        } catch (_: Exception) {
-            // keep defaults
-        }
-    }
-
-=======
->>>>>>> 3e76ede (made changes)
     GradientBackground {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-<<<<<<< HEAD
-                .verticalScroll(rememberScrollState()) // scrolling on real phones
-                .padding(horizontal = 20.dp)
-        ) {
-
-            // 🔹 Header: greeting + round avatar button
-=======
                 .padding(20.dp)
         ) {
 
             // Header
->>>>>>> 3e76ede (made changes)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -109,41 +66,6 @@ fun HomeScreen(
                     Text("Welcome back!", color = TextGrey, fontSize = 16.sp)
                 }
 
-<<<<<<< HEAD
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clickable { onProfileClick() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    // Outer yellow ring
-                    Box(
-                        modifier = Modifier
-                            .size(56.dp)
-                            .clip(CircleShape)
-                            .background(YellowAccent),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (photoUrl.isNotEmpty()) {
-                            AsyncImage(
-                                model = photoUrl,
-                                contentDescription = "Profile photo",
-                                modifier = Modifier
-                                    .size(50.dp)
-                                    .clip(CircleShape),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Text(
-                                text = userName.firstOrNull()?.uppercase() ?: "U",
-                                color = Color.Black,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp
-                            )
-                        }
-                    }
-                }
-=======
                 Text(
                     text = "Profile",
                     color = YellowAccent,
@@ -152,22 +74,10 @@ fun HomeScreen(
                         .align(Alignment.CenterVertically)
                         .clickable { onProfileClick() }
                 )
->>>>>>> 3e76ede (made changes)
             }
 
             Spacer(Modifier.height(18.dp))
 
-<<<<<<< HEAD
-            // 🔹 WEEKLY GRAPH (real ViewModel data, friend’s style)
-            val weeklyList = weeklySteps.values.toList()
-            WeeklyStepsGraph(
-                stepsList = if (weeklyList.isNotEmpty()) {
-                    weeklyList
-                } else {
-                    // fallback if VM has no data yet
-                    listOf(steps, steps, steps, steps, steps, steps, steps)
-                }
-=======
             // WEEKLY GRAPH
             // WEEKLY GRAPH
             WeeklyStepsGraph(
@@ -180,18 +90,13 @@ fun HomeScreen(
                     (steps * 0.4).toInt(),
                     (steps * 0.3).toInt()
                 )
->>>>>>> 3e76ede (made changes)
             )
 
 
 
             Spacer(Modifier.height(20.dp))
 
-<<<<<<< HEAD
-            // 🔹 PROGRESS RINGS (use normalized progress from VM like your friend)
-=======
             // PROGRESS RINGS
->>>>>>> 3e76ede (made changes)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -201,31 +106,19 @@ fun HomeScreen(
                 ProgressRing(
                     label = "Steps",
                     valueText = steps.toString(),
-<<<<<<< HEAD
-                    progress = stepProg
-=======
                     progress = (steps / 10000f).coerceIn(0f, 1f)   // Steps goal 10k
->>>>>>> 3e76ede (made changes)
                 )
 
                 ProgressRing(
                     label = "Calories",
                     valueText = String.format("%.0f", calories),
-<<<<<<< HEAD
-                    progress = calorieProg
-=======
                     progress = (calories.toFloat() / 400f).coerceIn(0f, 1f)  // Calorie goal 400 kcal
->>>>>>> 3e76ede (made changes)
                 )
 
                 ProgressRing(
                     label = "Distance",
                     valueText = String.format("%.2f km", distance),
-<<<<<<< HEAD
-                    progress = distanceProg
-=======
                     progress = (distance.toFloat() / 6f).coerceIn(0f, 1f)    // Distance goal: 6 km
->>>>>>> 3e76ede (made changes)
                 )
             }
 
@@ -306,3 +199,5 @@ fun HomeScreen(
         }
     }
 }
+
+//finished !!!

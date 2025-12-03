@@ -44,19 +44,19 @@ fun SplashScreen(
                 Text(
                     text = "Start your ",
                     color = TextWhite,
-                    fontSize = 25.sp,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = "Fitness ",
                     color = YellowAccent,
-                    fontSize = 25.sp,
+                    fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = "Journey",
                     color = TextWhite,
-                    fontSize = 25.sp,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -100,12 +100,7 @@ fun SplashScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             // CONTINUE AS GUEST
-            Text(
-                text = "Continue as a guest",
-                color = TextLightGrey,
-                textDecoration = TextDecoration.Underline,
-                fontSize = 14.sp,
-            )
+
         }
     }
 }

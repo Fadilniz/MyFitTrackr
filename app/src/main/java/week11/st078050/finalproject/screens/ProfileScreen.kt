@@ -5,10 +5,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -35,6 +33,7 @@ import week11.st078050.finalproject.ui.theme.TextLightGrey
 import week11.st078050.finalproject.ui.theme.TextWhite
 import week11.st078050.finalproject.ui.theme.YellowAccent
 import week11.st078050.finalproject.ui.theme.components.GradientBackground
+
 
 @Composable
 fun ProfileScreen(
@@ -130,11 +129,7 @@ fun ProfileScreen(
                 .fillMaxSize()
                 .padding(20.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState()) // 👈 NOW SCROLLABLE
-            ) {
+            Column(modifier = Modifier.fillMaxSize()) {
 
                 // Top Bar
                 Row(
@@ -394,11 +389,10 @@ fun ProfileScreen(
                                     .padding(top = 8.dp)
                             )
                         }
-
-                        Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
             }
         }
     }
 }
+

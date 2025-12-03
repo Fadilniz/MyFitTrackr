@@ -7,7 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
@@ -46,14 +46,13 @@ fun HomeScreen(
     val calories = vm.calories.collectAsState().value
     val distance = vm.distanceKm.collectAsState().value
 
-    // 🔹 real weekly data from ViewModel (friend’s code)
     val weeklySteps = vm.weeklySteps.collectAsState().value
 
     val stepProg = vm.stepProgress.collectAsState().value
     val calorieProg = vm.calorieProgress.collectAsState().value
     val distanceProg = vm.distanceProgress.collectAsState().value
 
-    // 🔹 User info for greeting + profile picture (your code)
+    // User info for greeting + profile picture
     val auth = remember { FirebaseAuth.getInstance() }
     val firestore = remember { FirebaseFirestore.getInstance() }
 
@@ -63,18 +62,10 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         try {
             val uid = auth.currentUser?.uid ?: return@LaunchedEffect
-
-            val snapshot = firestore
-                .collection("users")
-                .document(uid)
-                .get()
-                .await()
-
+            val snapshot = firestore.collection("users").document(uid).get().await()
             val user = snapshot.toObject(User::class.java)
             if (user != null) {
-                if (user.username.isNotBlank()) {
-                    userName = user.username
-                }
+                if (user.username.isNotBlank()) userName = user.username
                 photoUrl = user.photoUrl
             }
         } catch (_: Exception) {
@@ -83,210 +74,304 @@ fun HomeScreen(
     }
 
     GradientBackground {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()) // scrolling on real phones
-                .padding(horizontal = 20.dp)
-        ) {
-
-            // 🔹 Header: greeting + round avatar button
-            Row(
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                HomeTopBar(
+                    userName = userName,
+                    photoUrl = photoUrl,
+                    onProfileClick = onProfileClick
+                )
+            }
+        ) { paddingValues ->
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 32.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(paddingValues)
+                    .padding(horizontal = 20.dp, vertical = 12.dp)
             ) {
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = "Hi, $userName!",
+
+                // WEEKLY GRAPH
+                Text(
+                    text = "Weekly activity",
+                    style = MaterialTheme.typography.titleMedium.copy(
                         color = TextWhite,
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold
                     )
-                    Text(
-                        text = "Welcome back!",
-                        color = TextLightGrey,
-                        fontSize = 14.sp
+                )
+
+                Spacer(Modifier.height(10.dp))
+
+                val weeklyList = weeklySteps.values.toList()
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0x33222233)
                     )
+                ) {
+                    Box(modifier = Modifier.padding(16.dp)) {
+                        WeeklyStepsGraph(
+                            stepsList = if (weeklyList.isNotEmpty()) {
+                                weeklyList
+                            } else {
+                                listOf(steps, steps, steps, steps, steps, steps, steps)
+                            }
+                        )
+                    }
                 }
 
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clickable { onProfileClick() },
-                    contentAlignment = Alignment.Center
+                Spacer(Modifier.height(18.dp))
+
+                // PROGRESS RINGS
+                Text(
+                    text = "Today’s overview",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        color = TextWhite,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                )
+
+                Spacer(Modifier.height(10.dp))
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0x33222233)
+                    )
                 ) {
-                    // Outer yellow ring
-                    Box(
+                    Row(
                         modifier = Modifier
-                            .size(56.dp)
-                            .clip(CircleShape)
-                            .background(YellowAccent),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .padding(vertical = 14.dp, horizontal = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (photoUrl.isNotEmpty()) {
-                            AsyncImage(
-                                model = photoUrl,
-                                contentDescription = "Profile photo",
-                                modifier = Modifier
-                                    .size(50.dp)
-                                    .clip(CircleShape),
-                                contentScale = ContentScale.Crop
+                        ProgressRing(
+                            label = "Steps",
+                            valueText = steps.toString(),
+                            progress = stepProg
+                        )
+                        ProgressRing(
+                            label = "Calories",
+                            valueText = String.format("%.0f", calories),
+                            progress = calorieProg
+                        )
+                        ProgressRing(
+                            label = "Distance",
+                            valueText = String.format("%.2f km", distance),
+                            progress = distanceProg
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(20.dp))
+
+                // LIVE STEP COUNTER
+                HomeSectionCard(
+                    onClick = onStepsClick
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            "Live step counter",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                color = TextWhite,
+                                fontWeight = FontWeight.SemiBold
                             )
-                        } else {
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            steps.toString(),
+                            fontSize = 42.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = YellowAccent
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            "Steps today",
+                            style = MaterialTheme.typography.bodySmall.copy(color = TextGrey)
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(18.dp))
+
+                // ROUTE TRACKING
+                HomeSectionCard {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            "Route tracking",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                color = TextWhite,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "Use GPS to record your walking or running route.",
+                            style = MaterialTheme.typography.bodySmall.copy(color = TextGrey)
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        Button(
+                            onClick = onStartRoute,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(46.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = YellowAccent
+                            )
+                        ) {
                             Text(
-                                text = userName.firstOrNull()?.uppercase() ?: "U",
-                                color = Color.Black,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp
+                                "Start route tracking",
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    color = Color.Black,
+                                    fontWeight = FontWeight.SemiBold
+                                )
                             )
                         }
                     }
                 }
-            }
 
-            Spacer(Modifier.height(18.dp))
+                Spacer(Modifier.height(18.dp))
 
-            // 🔹 WEEKLY GRAPH (real ViewModel data, friend’s style)
-            val weeklyList = weeklySteps.values.toList()
-            WeeklyStepsGraph(
-                stepsList = if (weeklyList.isNotEmpty()) {
-                    weeklyList
-                } else {
-                    // fallback if VM has no data yet
-                    listOf(steps, steps, steps, steps, steps, steps, steps)
-                }
-            )
-
-            Spacer(Modifier.height(20.dp))
-
-            // 🔹 PROGRESS RINGS (use normalized progress from VM like your friend)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                ProgressRing(
-                    label = "Steps",
-                    valueText = steps.toString(),
-                    progress = stepProg
-                )
-
-                ProgressRing(
-                    label = "Calories",
-                    valueText = String.format("%.0f", calories),
-                    progress = calorieProg
-                )
-
-                ProgressRing(
-                    label = "Distance",
-                    valueText = String.format("%.2f km", distance),
-                    progress = distanceProg
-                )
-            }
-
-            Spacer(Modifier.height(24.dp))
-
-            // 🔹 Live Step Counter Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0x44222222), RoundedCornerShape(20.dp))
-                    .padding(20.dp)
-                    .clickable { onStepsClick() }
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        "Live Step Counter",
-                        color = TextWhite,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        steps.toString(),
-                        color = YellowAccent,
-                        fontSize = 48.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text("Steps Today", color = TextGrey, fontSize = 14.sp)
-                }
-            }
-
-            Spacer(Modifier.height(20.dp))
-
-            // 🔹 Route Tracking Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0x44222222), RoundedCornerShape(20.dp))
-                    .padding(20.dp)
-            ) {
-                Column {
-                    Text("Track Your Route", color = TextWhite, fontSize = 18.sp)
-                    Spacer(Modifier.height(10.dp))
-                    Text(
-                        "Use GPS to record your running path.",
-                        color = TextGrey,
-                        fontSize = 14.sp
-                    )
-                    Spacer(Modifier.height(15.dp))
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .background(YellowAccent, RoundedCornerShape(12.dp))
-                            .clickable { onStartRoute() },
-                        contentAlignment = Alignment.Center
-                    ) {
+                // POSE DETECTION
+                HomeSectionCard(
+                    onClick = onStartPoseDetection
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
-                            "Start Route Tracking",
-                            color = Color.Black,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
+                            "AI pose detection",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                color = TextWhite,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "Analyse your exercise form using ML Kit.",
+                            style = MaterialTheme.typography.bodySmall.copy(color = TextGrey)
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                // OPTIONAL: link to sensor dashboard
+                TextButton(
+                    onClick = onSensorDashboardClick,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                ) {
+                    Text(
+                        text = "Open sensor dashboard",
+                        style = MaterialTheme.typography.bodySmall.copy(color = TextLightGrey)
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                // LOGOUT
+                Text(
+                    "Logout",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        color = YellowAccent,
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .clickable { onLogout() }
+                        .padding(vertical = 6.dp)
+                )
+
+                Spacer(Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun HomeTopBar(
+    userName: String,
+    photoUrl: String,
+    onProfileClick: () -> Unit
+) {
+    TopAppBar(
+        title = {
+            Text(
+                text = "Hi, $userName",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    color = TextWhite,
+                    fontWeight = FontWeight.SemiBold
+                )
+            )
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.Transparent,
+            titleContentColor = TextWhite
+        ),
+        actions = {
+            Box(
+                modifier = Modifier
+                    .padding(end = 12.dp)
+                    .size(42.dp)
+                    .clickable { onProfileClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(YellowAccent),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (photoUrl.isNotEmpty()) {
+                        AsyncImage(
+                            model = photoUrl,
+                            contentDescription = "Profile photo",
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Text(
+                            text = userName.firstOrNull()?.uppercase() ?: "U",
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                color = Color.Black,
+                                fontWeight = FontWeight.Bold
+                            )
                         )
                     }
                 }
             }
-
-            Spacer(Modifier.height(20.dp))
-
-            // 🔹 Pose Detection Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0x44222222), RoundedCornerShape(20.dp))
-                    .padding(20.dp)
-                    .clickable { onStartPoseDetection() }
-            ) {
-                Column {
-                    Text("AI Pose Detection", color = TextWhite, fontSize = 18.sp)
-                    Spacer(Modifier.height(10.dp))
-                    Text(
-                        "Track your form using ML Kit.",
-                        color = TextGrey,
-                        fontSize = 14.sp
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(20.dp))
-
-            // 🔹 Logout
-            Text(
-                "Logout",
-                color = YellowAccent,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 16.sp,
-                modifier = Modifier.clickable { onLogout() }
-            )
-
-            Spacer(Modifier.height(12.dp))
         }
+    )
+}
+
+@Composable
+private fun HomeSectionCard(
+    onClick: () -> Unit = {},
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0x44222233)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 18.dp, vertical = 14.dp),
+            content = content
+        )
     }
 }

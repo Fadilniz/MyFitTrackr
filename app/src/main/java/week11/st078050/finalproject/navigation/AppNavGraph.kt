@@ -1,12 +1,12 @@
 package week11.st078050.finalproject.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import week11.st078050.finalproject.screens.*
-import week11.st078050.finalproject.screens.ProfileScreen
-
+import week11.st078050.finalproject.viewmodel.RouteTrackingViewModel
 
 @Composable
 fun AppNavGraph(navController: NavHostController) {
@@ -16,7 +16,6 @@ fun AppNavGraph(navController: NavHostController) {
         startDestination = "splash"
     ) {
 
-        // SPLASH
         composable("splash") {
             SplashScreen(
                 onLoginClick = { navController.navigate("login") },
@@ -25,7 +24,6 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
 
-        // LOGIN
         composable("login") {
             LoginScreen(
                 onBackClick = { navController.popBackStack() },
@@ -35,7 +33,6 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
 
-        // REGISTER
         composable("register") {
             RegisterScreen(
                 onBackClick = { navController.popBackStack() },
@@ -44,7 +41,6 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
 
-        // FORGOT PASSWORD
         composable("forgot") {
             ForgotPasswordScreen(
                 onBackClick = { navController.popBackStack() },
@@ -53,7 +49,6 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
 
-        // OTP
         composable("otp") {
             OtpScreen(
                 onBackClick = { navController.popBackStack() },
@@ -62,7 +57,6 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
 
-        // CREATE NEW PASSWORD
         composable("createNewPassword") {
             CreateNewPasswordScreen(
                 onBackClick = { navController.popBackStack() },
@@ -70,7 +64,6 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
 
-        // PASSWORD CHANGED SUCCESS
         composable("passwordChanged") {
             PasswordChangedScreen(
                 onLoginClick = { navController.navigate("login") }
@@ -83,11 +76,14 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
 
-        composable("track") {
+        composable("route_tracking") {
+            val vm: RouteTrackingViewModel = viewModel()
             RouteTrackingScreen(
+                viewModel = vm,
                 onBackClick = { navController.popBackStack() }
             )
         }
+
 
         composable("pose") {
             PoseDetectionScreen(
@@ -95,39 +91,24 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
 
-
-
-
-        // HOME
-        // HOME
         composable("home") {
             HomeScreen(
                 onStepsClick = { navController.navigate("steps") },
-                onStartRoute = { navController.navigate("track") },
+                onStartRoute = { navController.navigate("route_tracking") },
                 onStartPoseDetection = { navController.navigate("pose") },
                 onLogout = {
-                    //auth.signOut()
                     navController.navigate("login") {
                         popUpTo("home") { inclusive = true }
                     }
                 },
-                onProfileClick = { navController.navigate("profile") } // 🔹 NEW
+                onProfileClick = { navController.navigate("profile") }
             )
         }
-        // PROFILE
+
         composable("profile") {
             ProfileScreen(
                 onBackClick = { navController.popBackStack() }
             )
         }
-        composable("sensorDashboard") {
-            SensorDashboardScreen(
-                onBackClick = { navController.popBackStack() }
-            )
-        }
-
-
-
-
     }
 }

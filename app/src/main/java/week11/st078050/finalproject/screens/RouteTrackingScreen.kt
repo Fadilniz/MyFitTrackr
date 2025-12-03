@@ -1,136 +1,143 @@
 package week11.st078050.finalproject.screens
 
-import androidx.compose.foundation.Canvas
+import android.Manifest
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import week11.st078050.finalproject.ui.theme.*
-import week11.st078050.finalproject.ui.theme.components.GradientBackground
-import androidx.compose.ui.draw.clip
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.*
+import com.google.accompanist.permissions.*
+import week11.st078050.finalproject.viewmodel.RouteTrackingViewModel
 
+@OptIn(ExperimentalPermissionsApi::class)
+@SuppressLint("MissingPermission")
 @Composable
 fun RouteTrackingScreen(
+    viewModel: RouteTrackingViewModel = viewModel(),
     onBackClick: () -> Unit = {}
 ) {
-    GradientBackground {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp)
-        ) {
 
-            // Back Arrow
-            Icon(
-                imageVector = Icons.Filled.ArrowBack,
-                contentDescription = "Back",
-                tint = TextLightGrey,
-                modifier = Modifier
-                    .size(32.dp)
-                    .clickable { onBackClick() }
-            )
+    val uiState by viewModel.uiState.collectAsState()
 
-            Spacer(modifier = Modifier.height(20.dp))
+    val locationPermission = rememberPermissionState(
+        Manifest.permission.ACCESS_FINE_LOCATION
+    )
 
-            // Title
-            Text(
-                text = "GPS Route Tracking",
-                color = TextWhite,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold
-            )
+    LaunchedEffect(Unit) {
+        if (!locationPermission.status.isGranted) locationPermission.launchPermissionRequest()
+    }
 
-            Spacer(modifier = Modifier.height(20.dp))
+    if (!locationPermission.status.isGranted) {
+        Text(
+            "Please allow location permission to use GPS tracking.",
+            color = Color.White,
+            modifier = Modifier.padding(20.dp)
+        )
+        return
+    }
 
-            // Map Placeholder
-            Box(
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0D0D1A))
+    ) {
+
+        Column(modifier = Modifier.fillMaxSize()) {
+
+            // Top Bar
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(350.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color(0x33222222)),
-                contentAlignment = Alignment.Center
+                    .padding(16.dp)
             ) {
-
-                // Fake Path Polyline
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    drawLine(
-                        color = YellowAccent,
-                        start = Offset(100f, 300f),
-                        end = Offset(300f, 150f),
-                        strokeWidth = 12f,
-                        cap = StrokeCap.Round
-                    )
-
-                    drawLine(
-                        color = YellowAccent,
-                        start = Offset(300f, 150f),
-                        end = Offset(450f, 250f),
-                        strokeWidth = 12f,
-                        cap = StrokeCap.Round
+                IconButton(onClick = { onBackClick() }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White
                     )
                 }
-
-                Icon(
-                    imageVector = Icons.Filled.LocationOn,
-                    contentDescription = "Location",
-                    tint = YellowAccent,
-                    modifier = Modifier.size(50.dp)
+                Text(
+                    "GPS Route Tracking",
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleLarge
                 )
             }
 
-            Spacer(modifier = Modifier.height(30.dp))
+            val cameraPositionState = rememberCameraPositionState()
 
-            // Running Stats Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                RunStat("Distance", "1.42 km")
-                RunStat("Time", "12:48")
-                RunStat("Pace", "8'55\"")
+            LaunchedEffect(uiState.routePoints) {
+                if (uiState.routePoints.isNotEmpty()) {
+                    val last = uiState.routePoints.last()
+                    cameraPositionState.animate(
+                        update = CameraUpdateFactory.newLatLngZoom(last, 17f),
+                        durationMs = 700
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Start / Stop Button
-            Button(
-                onClick = { /* real logic later */ },
-                colors = ButtonDefaults.buttonColors(containerColor = YellowAccent),
+            GoogleMap(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(55.dp),
-                shape = RoundedCornerShape(50)
+                    .height(350.dp),
+                cameraPositionState = cameraPositionState,
+                properties = MapProperties(isMyLocationEnabled = true)
+            ) {
+                if (uiState.routePoints.size > 1) {
+                    Polyline(
+                        points = uiState.routePoints,
+                        color = Color.Yellow,
+                        width = 8f
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                StatBox("Distance", "%.2f km".format(uiState.distanceMeters / 1000))
+                StatBox("Time", uiState.formattedDuration)
+                StatBox("Pace", uiState.paceString)
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            Button(
+                onClick = {
+                    if (uiState.isTracking) viewModel.stopRun()
+                    else viewModel.startRun()
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (uiState.isTracking) Color(0xFFE53935) else Color(0xFFFFEB3B),
+                    contentColor = Color.Black
+                ),
+                modifier = Modifier
+                    .padding(horizontal = 32.dp)
+                    .fillMaxWidth()
+                    .height(60.dp)
             ) {
                 Text(
-                    text = "Start Run",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    text = if (uiState.isTracking) "Stop Run" else "Start Run",
+                    style = MaterialTheme.typography.titleMedium
                 )
             }
         }
     }
 }
 
-@Composable
-fun RunStat(title: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(title, color = TextGrey, fontSize = 14.sp)
-        Text(value, color = TextWhite, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-    }
-}

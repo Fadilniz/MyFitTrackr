@@ -3,33 +3,32 @@ package week11.st078050.finalproject.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import week11.st078050.finalproject.ui.theme.*
+import week11.st078050.finalproject.ui.theme.components.GradientBackground
+import week11.st078050.finalproject.ui.theme.components.ProgressRing
+import week11.st078050.finalproject.viewmodel.LocalFitnessViewModel
+import week11.st078050.finalproject.screens.WeeklyStepsGraph
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
+
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import week11.st078050.finalproject.data.model.User
-import week11.st078050.finalproject.ui.theme.TextGrey
-import week11.st078050.finalproject.ui.theme.TextLightGrey
-import week11.st078050.finalproject.ui.theme.TextWhite
-import week11.st078050.finalproject.ui.theme.YellowAccent
-import week11.st078050.finalproject.ui.theme.components.GradientBackground
-import week11.st078050.finalproject.ui.theme.components.ProgressRing
-import week11.st078050.finalproject.viewmodel.LocalFitnessViewModel
+
+
 
 @Composable
 fun HomeScreen(
@@ -53,6 +52,7 @@ fun HomeScreen(
     val calorieProg = vm.calorieProgress.collectAsState().value
     val distanceProg = vm.distanceProgress.collectAsState().value
 
+<<<<<<< HEAD
     // 🔹 User info for greeting + profile picture (your code)
     val auth = remember { FirebaseAuth.getInstance() }
     val firestore = remember { FirebaseFirestore.getInstance() }
@@ -82,38 +82,34 @@ fun HomeScreen(
         }
     }
 
+=======
+>>>>>>> 3e76ede (made changes)
     GradientBackground {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+<<<<<<< HEAD
                 .verticalScroll(rememberScrollState()) // scrolling on real phones
                 .padding(horizontal = 20.dp)
         ) {
 
             // 🔹 Header: greeting + round avatar button
+=======
+                .padding(20.dp)
+        ) {
+
+            // Header
+>>>>>>> 3e76ede (made changes)
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 32.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = "Hi, $userName!",
-                        color = TextWhite,
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Welcome back!",
-                        color = TextLightGrey,
-                        fontSize = 14.sp
-                    )
+                Column {
+                    Text("Hi, User!", color = TextWhite, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                    Text("Welcome back!", color = TextGrey, fontSize = 16.sp)
                 }
 
+<<<<<<< HEAD
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -147,10 +143,21 @@ fun HomeScreen(
                         }
                     }
                 }
+=======
+                Text(
+                    text = "Profile",
+                    color = YellowAccent,
+                    fontSize = 17.sp,
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically)
+                        .clickable { onProfileClick() }
+                )
+>>>>>>> 3e76ede (made changes)
             }
 
             Spacer(Modifier.height(18.dp))
 
+<<<<<<< HEAD
             // 🔹 WEEKLY GRAPH (real ViewModel data, friend’s style)
             val weeklyList = weeklySteps.values.toList()
             WeeklyStepsGraph(
@@ -160,11 +167,31 @@ fun HomeScreen(
                     // fallback if VM has no data yet
                     listOf(steps, steps, steps, steps, steps, steps, steps)
                 }
+=======
+            // WEEKLY GRAPH
+            // WEEKLY GRAPH
+            WeeklyStepsGraph(
+                stepsList = listOf(
+                    steps,
+                    (steps * 0.8).toInt(),
+                    (steps * 0.6).toInt(),
+                    (steps * 1.1).toInt(),
+                    (steps * 0.9).toInt(),
+                    (steps * 0.4).toInt(),
+                    (steps * 0.3).toInt()
+                )
+>>>>>>> 3e76ede (made changes)
             )
+
+
 
             Spacer(Modifier.height(20.dp))
 
+<<<<<<< HEAD
             // 🔹 PROGRESS RINGS (use normalized progress from VM like your friend)
+=======
+            // PROGRESS RINGS
+>>>>>>> 3e76ede (made changes)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -174,25 +201,38 @@ fun HomeScreen(
                 ProgressRing(
                     label = "Steps",
                     valueText = steps.toString(),
+<<<<<<< HEAD
                     progress = stepProg
+=======
+                    progress = (steps / 10000f).coerceIn(0f, 1f)   // Steps goal 10k
+>>>>>>> 3e76ede (made changes)
                 )
 
                 ProgressRing(
                     label = "Calories",
                     valueText = String.format("%.0f", calories),
+<<<<<<< HEAD
                     progress = calorieProg
+=======
+                    progress = (calories.toFloat() / 400f).coerceIn(0f, 1f)  // Calorie goal 400 kcal
+>>>>>>> 3e76ede (made changes)
                 )
 
                 ProgressRing(
                     label = "Distance",
                     valueText = String.format("%.2f km", distance),
+<<<<<<< HEAD
                     progress = distanceProg
+=======
+                    progress = (distance.toFloat() / 6f).coerceIn(0f, 1f)    // Distance goal: 6 km
+>>>>>>> 3e76ede (made changes)
                 )
             }
 
+
             Spacer(Modifier.height(24.dp))
 
-            // 🔹 Live Step Counter Card
+            // LIVE STEP COUNTER CARD
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -201,40 +241,27 @@ fun HomeScreen(
                     .clickable { onStepsClick() }
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        "Live Step Counter",
-                        color = TextWhite,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Text("Live Step Counter", color = TextWhite, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(12.dp))
-                    Text(
-                        steps.toString(),
-                        color = YellowAccent,
-                        fontSize = 48.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text(steps.toString(), color = YellowAccent, fontSize = 48.sp, fontWeight = FontWeight.Bold)
                     Text("Steps Today", color = TextGrey, fontSize = 14.sp)
                 }
             }
 
             Spacer(Modifier.height(20.dp))
 
-            // 🔹 Route Tracking Card
+            // ROUTE TRACKING
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color(0x44222222), RoundedCornerShape(20.dp))
                     .padding(20.dp)
             ) {
+
                 Column {
                     Text("Track Your Route", color = TextWhite, fontSize = 18.sp)
                     Spacer(Modifier.height(10.dp))
-                    Text(
-                        "Use GPS to record your running path.",
-                        color = TextGrey,
-                        fontSize = 14.sp
-                    )
+                    Text("Use GPS to record your running path.", color = TextGrey, fontSize = 14.sp)
                     Spacer(Modifier.height(15.dp))
                     Box(
                         modifier = Modifier
@@ -244,19 +271,14 @@ fun HomeScreen(
                             .clickable { onStartRoute() },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            "Start Route Tracking",
-                            color = Color.Black,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
-                        )
+                        Text("Start Route Tracking", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                 }
             }
 
             Spacer(Modifier.height(20.dp))
 
-            // 🔹 Pose Detection Card
+            // POSE DETECTION
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -267,17 +289,13 @@ fun HomeScreen(
                 Column {
                     Text("AI Pose Detection", color = TextWhite, fontSize = 18.sp)
                     Spacer(Modifier.height(10.dp))
-                    Text(
-                        "Track your form using ML Kit.",
-                        color = TextGrey,
-                        fontSize = 14.sp
-                    )
+                    Text("Track your form using ML Kit.", color = TextGrey, fontSize = 14.sp)
                 }
             }
 
             Spacer(Modifier.height(20.dp))
 
-            // 🔹 Logout
+            // LOGOUT
             Text(
                 "Logout",
                 color = YellowAccent,
@@ -285,8 +303,6 @@ fun HomeScreen(
                 fontSize = 16.sp,
                 modifier = Modifier.clickable { onLogout() }
             )
-
-            Spacer(Modifier.height(12.dp))
         }
     }
 }

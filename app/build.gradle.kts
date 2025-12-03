@@ -54,9 +54,17 @@ dependencies {
     // Firebase Dependencies
     implementation(libs.firebase.auth)
     // ADDED THIS: Firebase Firestore
-    implementation("com.google.firebase:firebase-firestore")
+    //implementation("com.google.firebase:firebase-firestore")
     // ADDED THIS: Firebase BoM (Recommended to manage versions)
     implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
+    // Firebase Auth + Firestore + Storage (ktx)
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
+    // Image loading for Compose (profile photo)
+    implementation("io.coil-kt:coil-compose:2.7.0")
+
+
 
     implementation(libs.androidx.compose.ui.text)
     implementation(libs.androidx.compose.foundation)

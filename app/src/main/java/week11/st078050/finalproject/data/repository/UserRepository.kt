@@ -25,7 +25,7 @@ class UserRepository(
         return snapshot.toObject(User::class.java)
     }
 
-    // 🔹 Update full profile (username + height + weight + step goal)
+    // 🔹 Update profile fields (no photo)
     suspend fun updateProfile(
         username: String,
         heightCm: Int,
@@ -52,14 +52,36 @@ class UserRepository(
         }
     }
 
-    // 🔹 Update only username (if some part of app needs it)
-    suspend fun updateUsername(newUsername: String): Boolean {
+    // 🔹 Update just photo URL
+    suspend fun updatePhotoUrl(photoUrl: String): Boolean {
         val uid = currentUserId() ?: return false
 
         return try {
             firestore.collection("users")
                 .document(uid)
-                .update("username", newUsername)
+                .update("photoUrl", photoUrl)
+                .await()
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    // 🔹 Reset height/weight/goal and photo
+    suspend fun resetProfileData(): Boolean {
+        val uid = currentUserId() ?: return false
+
+        val updates = mapOf(
+            "heightCm" to 0,
+            "weightKg" to 0,
+            "stepGoal" to 0,
+            "photoUrl" to ""
+        )
+
+        return try {
+            firestore.collection("users")
+                .document(uid)
+                .update(updates)
                 .await()
             true
         } catch (e: Exception) {

@@ -1,7 +1,11 @@
 package week11.st078050.finalproject.screens
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -9,15 +13,20 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import week11.st078050.finalproject.data.repository.UserRepository
 import week11.st078050.finalproject.ui.theme.TextGrey
 import week11.st078050.finalproject.ui.theme.TextLightGrey
@@ -25,29 +34,74 @@ import week11.st078050.finalproject.ui.theme.TextWhite
 import week11.st078050.finalproject.ui.theme.YellowAccent
 import week11.st078050.finalproject.ui.theme.components.GradientBackground
 
+
 @Composable
 fun ProfileScreen(
     onBackClick: () -> Unit = {}
 ) {
     val auth = remember { FirebaseAuth.getInstance() }
     val firestore = remember { FirebaseFirestore.getInstance() }
+    val storage = remember { FirebaseStorage.getInstance() }
     val repository = remember { UserRepository(auth, firestore) }
 
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
 
-    // New editable fields
-    var heightText by remember { mutableStateOf("") }   // in cm
-    var weightText by remember { mutableStateOf("") }   // in kg
-    var stepGoalText by remember { mutableStateOf("") } // daily steps
+    // Editable fields
+    var heightText by remember { mutableStateOf("") }   // cm
+    var weightText by remember { mutableStateOf("") }   // kg
+    var stepGoalText by remember { mutableStateOf("") } // steps
+
+    // Profile photo
+    var photoUrl by remember { mutableStateOf("") }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     var isLoading by remember { mutableStateOf(true) }
     var isSaving by remember { mutableStateOf(false) }
+    var isUploadingPhoto by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
 
     val scope = rememberCoroutineScope()
 
-    // 🔹 Load profile when screen opens
+    // Image picker (gallery)
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            selectedImageUri = uri
+            scope.launch {
+                isUploadingPhoto = true
+                message = null
+                try {
+                    val uid = auth.currentUser?.uid
+                    if (uid != null) {
+                        val ref = storage.reference
+                            .child("profile_pictures")
+                            .child("$uid.jpg")
+
+                        ref.putFile(uri).await()
+                        val downloadUrl = ref.downloadUrl.await().toString()
+
+                        val success = repository.updatePhotoUrl(downloadUrl)
+                        if (success) {
+                            photoUrl = downloadUrl
+                            message = "Profile photo updated."
+                        } else {
+                            message = "Failed to save photo URL."
+                        }
+                    } else {
+                        message = "User not logged in."
+                    }
+                } catch (e: Exception) {
+                    message = e.message ?: "Failed to upload photo."
+                } finally {
+                    isUploadingPhoto = false
+                }
+            }
+        }
+    }
+
+    // Load profile on screen start
     LaunchedEffect(Unit) {
         try {
             val profile = repository.getCurrentUserProfile()
@@ -55,10 +109,10 @@ fun ProfileScreen(
                 username = profile.username
                 email = profile.email
 
-                // Pre-fill numeric fields if they have values
                 if (profile.heightCm > 0) heightText = profile.heightCm.toString()
                 if (profile.weightKg > 0) weightText = profile.weightKg.toString()
                 if (profile.stepGoal > 0) stepGoalText = profile.stepGoal.toString()
+                photoUrl = profile.photoUrl
             } else {
                 message = "No profile found."
             }
@@ -75,10 +129,9 @@ fun ProfileScreen(
                 .fillMaxSize()
                 .padding(20.dp)
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                // 🔹 Top bar with Back + title
+            Column(modifier = Modifier.fillMaxSize()) {
+
+                // Top Bar
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -104,8 +157,8 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                // Loading Indicator
                 if (isLoading) {
-                    // 🔹 Loading state
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -113,18 +166,63 @@ fun ProfileScreen(
                         CircularProgressIndicator(color = YellowAccent)
                     }
                 } else {
-                    // 🔹 Profile form
+                    // Profile Form
                     Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.Start
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
 
-                        // Username field
-                        Text(
-                            text = "Username",
-                            color = TextGrey,
-                            fontSize = 14.sp
-                        )
+                        // 🔹 Profile picture circle
+                        Box(
+                            modifier = Modifier
+                                .size(96.dp)
+                                .clip(CircleShape)
+                                .clickable {
+                                    if (!isUploadingPhoto) {
+                                        imagePickerLauncher.launch("image/*")
+                                    }
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (photoUrl.isNotEmpty() || selectedImageUri != null) {
+                                AsyncImage(
+                                    model = selectedImageUri ?: photoUrl,
+                                    contentDescription = "Profile picture",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                Text(
+                                    text = "Add\nPhoto",
+                                    color = TextLightGrey,
+                                    textAlign = TextAlign.Center,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        if (isUploadingPhoto) {
+                            Text(
+                                text = "Uploading photo...",
+                                color = YellowAccent,
+                                fontSize = 12.sp
+                            )
+                        } else {
+                            Text(
+                                text = "Tap to change photo",
+                                color = TextLightGrey,
+                                fontSize = 12.sp
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        // ========== FORM FIELDS ==========
+
+                        // Username
+                        Text(text = "Username", color = TextGrey, fontSize = 14.sp)
                         OutlinedTextField(
                             value = username,
                             onValueChange = { username = it },
@@ -137,14 +235,10 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // Email (read-only)
-                        Text(
-                            text = "Email",
-                            color = TextGrey,
-                            fontSize = 14.sp
-                        )
+                        Text(text = "Email", color = TextGrey, fontSize = 14.sp)
                         OutlinedTextField(
                             value = email,
-                            onValueChange = { },
+                            onValueChange = {},
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 8.dp),
@@ -155,11 +249,7 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(24.dp))
 
                         // Height
-                        Text(
-                            text = "Height (cm)",
-                            color = TextGrey,
-                            fontSize = 14.sp
-                        )
+                        Text(text = "Height (cm)", color = TextGrey, fontSize = 14.sp)
                         OutlinedTextField(
                             value = heightText,
                             onValueChange = { heightText = it },
@@ -173,11 +263,7 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // Weight
-                        Text(
-                            text = "Weight (kg)",
-                            color = TextGrey,
-                            fontSize = 14.sp
-                        )
+                        Text(text = "Weight (kg)", color = TextGrey, fontSize = 14.sp)
                         OutlinedTextField(
                             value = weightText,
                             onValueChange = { weightText = it },
@@ -190,12 +276,8 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Daily Step Goal
-                        Text(
-                            text = "Daily Step Goal",
-                            color = TextGrey,
-                            fontSize = 14.sp
-                        )
+                        // Step Goal
+                        Text(text = "Daily Step Goal", color = TextGrey, fontSize = 14.sp)
                         OutlinedTextField(
                             value = stepGoalText,
                             onValueChange = { stepGoalText = it },
@@ -208,7 +290,6 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Info text
                         Text(
                             text = "Update your profile details. Height, weight and daily step goal help personalize your fitness stats.",
                             color = TextLightGrey,
@@ -217,59 +298,90 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // 🔹 Save button
-                        Button(
-                            onClick = {
-                                message = null
-
-                                if (username.isBlank()) {
-                                    message = "Username cannot be empty."
-                                } else {
-                                    // Safely parse numbers (blank or invalid = 0)
-                                    val height = heightText.toIntOrNull() ?: 0
-                                    val weight = weightText.toIntOrNull() ?: 0
-                                    val stepGoal = stepGoalText.toIntOrNull() ?: 0
-
+                        // 🔹 Save + Reset buttons row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            // Reset button
+                            OutlinedButton(
+                                onClick = {
+                                    message = null
                                     isSaving = true
                                     scope.launch {
-                                        val success = repository.updateProfile(
-                                            username = username.trim(),
-                                            heightCm = height,
-                                            weightKg = weight,
-                                            stepGoal = stepGoal
-                                        )
+                                        val success = repository.resetProfileData()
                                         isSaving = false
-                                        message = if (success) {
-                                            "Profile updated successfully."
+                                        if (success) {
+                                            heightText = ""
+                                            weightText = ""
+                                            stepGoalText = ""
+                                            photoUrl = ""
+                                            selectedImageUri = null
+                                            message = "Profile reset to defaults."
                                         } else {
-                                            "Failed to update profile."
+                                            message = "Failed to reset profile."
                                         }
                                     }
-                                }
-                            },
-                            enabled = !isSaving,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = YellowAccent
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(55.dp)
-                        ) {
-                            Text(
-                                text = if (isSaving) "Saving..." else "Save Changes",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 16.sp,
-                                color = Color.Black
-                            )
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp)
+                            ) {
+                                Text("Reset")
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            // Save button
+                            Button(
+                                onClick = {
+                                    message = null
+
+                                    if (username.isBlank()) {
+                                        message = "Username cannot be empty."
+                                    } else {
+                                        val height = heightText.toIntOrNull() ?: 0
+                                        val weight = weightText.toIntOrNull() ?: 0
+                                        val stepGoal = stepGoalText.toIntOrNull() ?: 0
+
+                                        isSaving = true
+                                        scope.launch {
+                                            val success = repository.updateProfile(
+                                                username = username.trim(),
+                                                heightCm = height,
+                                                weightKg = weight,
+                                                stepGoal = stepGoal
+                                            )
+                                            isSaving = false
+                                            message =
+                                                if (success) "Profile updated successfully."
+                                                else "Failed to update profile."
+                                        }
+                                    }
+                                },
+                                enabled = !isSaving && !isUploadingPhoto,
+                                colors = ButtonDefaults.buttonColors(containerColor = YellowAccent),
+                                modifier = Modifier
+                                    .weight(1.5f)
+                                    .height(48.dp)
+                            ) {
+                                Text(
+                                    text = if (isSaving) "Saving..." else "Save Changes",
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 16.sp,
+                                    color = Color.Black
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // 🔹 Message section (error/success)
+                        // Message
                         message?.let { msg ->
                             Text(
                                 text = msg,
-                                color = if (msg.contains("success", ignoreCase = true)) Color(0xFF4CAF50) else Color.Red,
+                                color = if (msg.contains("success", ignoreCase = true))
+                                    Color(0xFF4CAF50) else Color.Red,
                                 fontSize = 14.sp,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier
@@ -283,3 +395,4 @@ fun ProfileScreen(
         }
     }
 }
+

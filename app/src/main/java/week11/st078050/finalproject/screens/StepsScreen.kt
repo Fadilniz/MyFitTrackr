@@ -54,8 +54,10 @@ fun StepsScreen(
     var hasPermission by remember { mutableStateOf(false) }
 
     // Text-to-Speech for voice alerts
+    // Text-to-Speech for voice alerts
     var textToSpeech by remember { mutableStateOf<TextToSpeech?>(null) }
-    var hasSpoken100 by remember { mutableStateOf(false) }
+    var lastAnnouncedHundreds by remember { mutableStateOf(0) }
+
 
     DisposableEffect(Unit) {
         // Create TextToSpeech instance
@@ -160,22 +162,28 @@ fun StepsScreen(
                 )
             }
             // Voice alert when user reaches 100 steps
+            // Voice alert every 100 steps (100, 200, 300, ...)
             LaunchedEffect(steps) {
-                if (steps >= 100 && !hasSpoken100) {
-                    textToSpeech?.speak(
-                        "You have walked $steps steps today",
-                        TextToSpeech.QUEUE_FLUSH,
-                        null,
-                        "steps-tts"
-                    )
-                    hasSpoken100 = true
-                }
+                if (steps >= 100) {
+                    val hundreds = steps / 100               // 0–99 -> 0, 100–199 -> 1, etc.
+                    if (hundreds > lastAnnouncedHundreds) {
+                        val roundedSteps = hundreds * 100    // 1 -> 100, 2 -> 200...
 
-                // Reset flag if steps go below 100 (optional, lets it trigger again)
-                if (steps < 100) {
-                    hasSpoken100 = false
+                        textToSpeech?.speak(
+                            "You have walked $roundedSteps steps today",
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            "steps-$roundedSteps"
+                        )
+
+                        lastAnnouncedHundreds = hundreds
+                    }
+                } else {
+                    // If steps go back below 100, reset, so a new session can re-announce
+                    lastAnnouncedHundreds = 0
                 }
             }
+
 
 
             // CIRCLE UI

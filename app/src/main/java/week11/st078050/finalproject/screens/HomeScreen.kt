@@ -18,6 +18,16 @@ import week11.st078050.finalproject.ui.theme.components.GradientBackground
 import week11.st078050.finalproject.ui.theme.components.ProgressRing
 import week11.st078050.finalproject.viewmodel.LocalFitnessViewModel
 import week11.st078050.finalproject.screens.WeeklyStepsGraph
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
+import week11.st078050.finalproject.data.model.User
+
 
 
 @Composable
@@ -39,6 +49,37 @@ fun HomeScreen(
     val calorieProg = vm.calorieProgress.collectAsState().value
     val distanceProg = vm.distanceProgress.collectAsState().value
 
+    // 🔹 User info for greeting + profile picture
+    val auth = remember { FirebaseAuth.getInstance() }
+    val firestore = remember { FirebaseFirestore.getInstance() }
+
+    var userName by remember { mutableStateOf("User") }
+    var photoUrl by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        try {
+            val uid = auth.currentUser?.uid ?: return@LaunchedEffect
+
+            val snapshot = firestore
+                .collection("users")
+                .document(uid)
+                .get()
+                .await()
+
+            val user = snapshot.toObject(User::class.java)
+            if (user != null) {
+                if (user.username.isNotBlank()) {
+                    userName = user.username
+                }
+                photoUrl = user.photoUrl
+            }
+        } catch (_: Exception) {
+            // ignore – keep defaults if load fails
+        }
+    }
+
+
+
     GradientBackground {
         Column(
             modifier = Modifier
@@ -56,17 +97,30 @@ fun HomeScreen(
                     Text("Welcome back!", color = TextGrey, fontSize = 16.sp)
                 }
 
-                Text(
-                    text = "Profile",
-                    color = YellowAccent,
-                    fontSize = 17.sp,
+                Box(
                     modifier = Modifier
-                        .align(Alignment.CenterVertically)
-                        .clickable { onProfileClick() }
-                )
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .clickable { onProfileClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (photoUrl.isNotEmpty()) {
+                        AsyncImage(
+                            model = photoUrl,
+                            contentDescription = "Profile photo",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Text(
+                            text = userName.firstOrNull()?.uppercase() ?: "U",
+                            color = TextWhite,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        )
+                    }
+                }
             }
-
-            Spacer(Modifier.height(18.dp))
 
             // WEEKLY GRAPH
             // WEEKLY GRAPH

@@ -9,7 +9,6 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -29,7 +28,7 @@ import week11.st078050.finalproject.ui.theme.TextGrey
 import week11.st078050.finalproject.ui.theme.TextWhite
 import week11.st078050.finalproject.ui.theme.YellowAccent
 import week11.st078050.finalproject.ui.theme.components.GradientBackground
-import week11.st078050.finalproject.viewmodel.LocalFitnessViewModel
+import week11.st078050.finalproject.data.repository.LocalFitnessViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)

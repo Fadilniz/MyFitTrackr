@@ -9,6 +9,10 @@ import java.util.Locale
 
 class FitnessViewModel : ViewModel() {
 
+    // 🔥 PERSISTENT STORAGE (DOES NOT RESET)
+    var baseStep: Float? = null          // baseline from sensor
+    var savedSteps: Int = 0              // last known steps (persists across screens)
+
     // LIVE VALUES
     private val _steps = MutableStateFlow(0)
     val steps: StateFlow<Int> = _steps
@@ -35,6 +39,12 @@ class FitnessViewModel : ViewModel() {
     val stepProgress = MutableStateFlow(0f)
     val calorieProgress = MutableStateFlow(0f)
     val distanceProgress = MutableStateFlow(0f)
+
+    // SAVE steps persistently
+    fun saveSteps(count: Int) {
+        savedSteps = count
+        updateSteps(count)
+    }
 
     // UPDATE FROM SENSOR
     fun updateSteps(newSteps: Int) {

@@ -13,7 +13,7 @@ import week11.st078050.finalproject.navigation.AppNavGraph
 import week11.st078050.finalproject.ui.theme.MyFitTrackrTheme
 
 import week11.st078050.finalproject.data.repository.FitnessViewModel
-import week11.st078050.finalproject.viewmodel.LocalFitnessViewModel
+import week11.st078050.finalproject.data.repository.LocalFitnessViewModel
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)

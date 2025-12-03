@@ -29,7 +29,7 @@ import week11.st078050.finalproject.ui.theme.TextWhite
 import week11.st078050.finalproject.ui.theme.YellowAccent
 import week11.st078050.finalproject.ui.theme.components.GradientBackground
 import week11.st078050.finalproject.ui.theme.components.ProgressRing
-import week11.st078050.finalproject.viewmodel.LocalFitnessViewModel
+import week11.st078050.finalproject.data.repository.LocalFitnessViewModel
 
 @Composable
 fun HomeScreen(

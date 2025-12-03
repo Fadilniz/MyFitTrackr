@@ -17,8 +17,6 @@ import week11.st078050.finalproject.ui.theme.*
 import week11.st078050.finalproject.ui.theme.components.GradientBackground
 import week11.st078050.finalproject.ui.theme.components.ProgressRing
 import week11.st078050.finalproject.viewmodel.LocalFitnessViewModel
-import week11.st078050.finalproject.screens.WeeklyStepsGraph
-
 
 @Composable
 fun HomeScreen(
@@ -35,11 +33,15 @@ fun HomeScreen(
     val calories = vm.calories.collectAsState().value
     val distance = vm.distanceKm.collectAsState().value
 
+    // NEW — REAL WEEKLY DATA
+    val weeklySteps = vm.weeklySteps.collectAsState().value
+
     val stepProg = vm.stepProgress.collectAsState().value
     val calorieProg = vm.calorieProgress.collectAsState().value
     val distanceProg = vm.distanceProgress.collectAsState().value
 
     GradientBackground {
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -68,21 +70,8 @@ fun HomeScreen(
 
             Spacer(Modifier.height(18.dp))
 
-            // WEEKLY GRAPH
-            // WEEKLY GRAPH
-            WeeklyStepsGraph(
-                stepsList = listOf(
-                    steps,
-                    (steps * 0.8).toInt(),
-                    (steps * 0.6).toInt(),
-                    (steps * 1.1).toInt(),
-                    (steps * 0.9).toInt(),
-                    (steps * 0.4).toInt(),
-                    (steps * 0.3).toInt()
-                )
-            )
-
-
+            // WEEKLY GRAPH (NOW REAL VALUES)
+            WeeklyStepsGraph(stepsList = weeklySteps.values.toList())
 
             Spacer(Modifier.height(20.dp))
 
@@ -93,25 +82,25 @@ fun HomeScreen(
                     .padding(vertical = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+
                 ProgressRing(
                     label = "Steps",
                     valueText = steps.toString(),
-                    progress = (steps / 10000f).coerceIn(0f, 1f)   // Steps goal 10k
+                    progress = stepProg
                 )
 
                 ProgressRing(
                     label = "Calories",
                     valueText = String.format("%.0f", calories),
-                    progress = (calories.toFloat() / 400f).coerceIn(0f, 1f)  // Calorie goal 400 kcal
+                    progress = calorieProg
                 )
 
                 ProgressRing(
                     label = "Distance",
                     valueText = String.format("%.2f km", distance),
-                    progress = (distance.toFloat() / 6f).coerceIn(0f, 1f)    // Distance goal: 6 km
+                    progress = distanceProg
                 )
             }
-
 
             Spacer(Modifier.height(24.dp))
 

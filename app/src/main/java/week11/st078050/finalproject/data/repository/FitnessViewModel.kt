@@ -34,7 +34,10 @@ class FitnessViewModel : ViewModel() {
     )
 
     // GOALS
-    private val dailyStepGoal = 10000
+    // 👉 This is now DYNAMIC, based on user profile (stepGoal)
+    private val _dailyStepGoal = MutableStateFlow(10_000)
+    val dailyStepGoal: StateFlow<Int> = _dailyStepGoal
+
     private val calorieGoal = 400.0
     private val distanceGoal = 6.0
 
@@ -52,6 +55,14 @@ class FitnessViewModel : ViewModel() {
     fun onUserLogout() {
         currentUserId = null
         resetInMemory()
+    }
+
+    // 🔹 Called when we know the user's step goal (from Firestore profile)
+    fun setDailyStepGoal(goal: Int) {
+        // Avoid zero / negative → default to 1000
+        val safeGoal = if (goal <= 0) 1000 else goal
+        _dailyStepGoal.value = safeGoal
+        recalcProgress()   // Recalculate progress with new goal
     }
 
     // Increase steps by a delta from the sensor
@@ -77,6 +88,18 @@ class FitnessViewModel : ViewModel() {
             "Mon" to 0, "Tue" to 0, "Wed" to 0,
             "Thu" to 0, "Fri" to 0, "Sat" to 0, "Sun" to 0
         )
+        // NOTE: we do NOT reset dailyStepGoal here
+    }
+
+    private fun recalcProgress() {
+        val goal = _dailyStepGoal.value.coerceAtLeast(1).toFloat()
+        val s = _steps.value
+
+        stepProgress.value = (s / goal).coerceIn(0f, 1f)
+        calorieProgress.value =
+            (_calories.value / calorieGoal).toFloat().coerceIn(0f, 1f)
+        distanceProgress.value =
+            (_distanceKm.value / distanceGoal).toFloat().coerceIn(0f, 1f)
     }
 
     private fun updateFromAbsoluteSteps(newSteps: Int) {
@@ -84,11 +107,7 @@ class FitnessViewModel : ViewModel() {
         _distanceKm.value = newSteps * 0.0008
         _calories.value = newSteps * 0.04
 
-        stepProgress.value = (newSteps / dailyStepGoal.toFloat()).coerceIn(0f, 1f)
-        calorieProgress.value =
-            (_calories.value / calorieGoal).toFloat().coerceIn(0f, 1f)
-        distanceProgress.value =
-            (_distanceKm.value / distanceGoal).toFloat().coerceIn(0f, 1f)
+        recalcProgress()
 
         // Which day is today? ("Mon", "Tue", ...)
         val today = LocalDate.now()

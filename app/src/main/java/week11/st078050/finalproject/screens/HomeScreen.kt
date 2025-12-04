@@ -15,9 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
 import coil.compose.AsyncImage
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -29,14 +29,14 @@ import week11.st078050.finalproject.ui.theme.TextWhite
 import week11.st078050.finalproject.ui.theme.YellowAccent
 import week11.st078050.finalproject.ui.theme.components.GradientBackground
 import week11.st078050.finalproject.ui.theme.components.ProgressRing
-import week11.st078050.finalproject.data.repository.LocalFitnessViewModel
+import week11.st078050.finalproject.data.repository.LocalFitnessViewModel   // 👈 IMPORTANT: correct package
 
 @Composable
 fun HomeScreen(
     onStartRoute: () -> Unit = {},
     onStartPoseDetection: () -> Unit = {},
     onLogout: () -> Unit = {},
-    onStepsClick: () ->  Unit = {},
+    onStepsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     onSensorDashboardClick: () -> Unit = {}
 ) {
@@ -52,13 +52,16 @@ fun HomeScreen(
     val calorieProg = vm.calorieProgress.collectAsState().value
     val distanceProg = vm.distanceProgress.collectAsState().value
 
+    // 👉 NEW: observe daily step goal and pass to graph
+    val dailyGoal = vm.dailyStepGoal.collectAsState().value
+
     val auth = remember { FirebaseAuth.getInstance() }
     val firestore = remember { FirebaseFirestore.getInstance() }
 
     var userName by remember { mutableStateOf("User") }
     var photoUrl by remember { mutableStateOf("") }
 
-    // Load profile info
+    // Load profile info (including stepGoal)
     LaunchedEffect(Unit) {
         try {
             val uid = auth.currentUser?.uid ?: return@LaunchedEffect
@@ -67,6 +70,11 @@ fun HomeScreen(
             if (user != null) {
                 if (user.username.isNotBlank()) userName = user.username
                 photoUrl = user.photoUrl
+
+                // 👉 Push stepGoal into FitnessViewModel so graphs can scale
+                if (user.stepGoal > 0) {
+                    vm.setDailyStepGoal(user.stepGoal)
+                }
             }
         } catch (_: Exception) {}
     }
@@ -112,9 +120,10 @@ fun HomeScreen(
                 ) {
                     Box(modifier = Modifier.padding(16.dp)) {
                         WeeklyStepsGraph(
-                            stepsList = if (weeklyList.isNotEmpty()) weeklyList
-                            else listOf(0, 0, 0, 0, 0, 0, 0)
+                            stepsList = weeklyList,
+                            stepGoal = dailyGoal// pass dynamic user goal
                         )
+
                     }
                 }
 
@@ -169,8 +178,10 @@ fun HomeScreen(
                 // LIVE STEP COUNTER
                 // ------------------------------------------
                 HomeSectionCard(onClick = onStepsClick) {
-                    Column(modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
 
                         Text(
                             "Live step counter",

@@ -2,10 +2,14 @@ package week11.st078050.finalproject.viewmodel
 
 import android.app.Application
 import android.location.Location
+import android.os.Looper
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +21,7 @@ data class RouteUiState(
     val routePoints: List<LatLng> = emptyList(),
     val distanceMeters: Double = 0.0,
     val durationSeconds: Long = 0L,
-    val paceMps: Double = 0.0,  // meters/second
+    val paceMps: Double = 0.0
 )
 
 class RouteTrackingViewModel(application: Application) : AndroidViewModel(application) {
@@ -27,14 +31,14 @@ class RouteTrackingViewModel(application: Application) : AndroidViewModel(applic
     private val _uiState = MutableStateFlow(RouteUiState())
     val uiState: StateFlow<RouteUiState> = _uiState
 
-    private var locationCallback: LocationCallback? = null
     private var timerJob: Job? = null
+    private var locationCallback: LocationCallback? = null
     private var startTime = 0L
 
     val mapCameraPosition = MutableStateFlow<LatLng?>(null)
 
     // -------------------------
-    // INITIALIZATION
+    // INITIALIZE MAP LOCATION
     // -------------------------
     fun initialize() {
         startLocationUpdates()
@@ -48,30 +52,62 @@ class RouteTrackingViewModel(application: Application) : AndroidViewModel(applic
 
         startTime = System.currentTimeMillis()
 
-        _uiState.value = _uiState.value.copy(
-            isTracking = true
-        )
+        _uiState.value = _uiState.value.copy(isTracking = true)
 
         startTimer()
     }
 
     // -------------------------
-    // STOP RUN
+    // STOP RUN  +  SAVE TO FIREBASE
     // -------------------------
     fun stopRun() {
-        _uiState.value = _uiState.value.copy(
-            isTracking = false
-        )
+        _uiState.value = _uiState.value.copy(isTracking = false)
         timerJob?.cancel()
+
+        saveRunToFirebase()
+    }
+
+    // -------------------------
+    // FIREBASE SAVE
+    // -------------------------
+    private fun saveRunToFirebase() {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val firestore = FirebaseFirestore.getInstance()
+
+        val data = hashMapOf(
+            "distanceMeters" to _uiState.value.distanceMeters,
+            "durationSeconds" to _uiState.value.durationSeconds,
+            "paceMps" to _uiState.value.paceMps,
+            "timestamp" to FieldValue.serverTimestamp()
+        )
+
+        firestore.collection("users")
+            .document(uid)
+            .collection("fitness")
+            .add(data)
+    }
+
+    // -------------------------
+    // TIMER
+    // -------------------------
+    private fun startTimer() {
+
+        timerJob = viewModelScope.launch {
+            while (_uiState.value.isTracking) {
+                val elapsed = (System.currentTimeMillis() - startTime) / 1000
+                _uiState.value = _uiState.value.copy(durationSeconds = elapsed)
+                delay(1000)
+            }
+        }
     }
 
     // -------------------------
     // LOCATION UPDATES
     // -------------------------
     private fun startLocationUpdates() {
-
         val request = LocationRequest.Builder(
-            Priority.PRIORITY_HIGH_ACCURACY, 1000L
+            Priority.PRIORITY_HIGH_ACCURACY,
+            1000L
         ).setMinUpdateDistanceMeters(1f).build()
 
         locationCallback = object : LocationCallback() {
@@ -84,60 +120,42 @@ class RouteTrackingViewModel(application: Application) : AndroidViewModel(applic
         fusedClient.requestLocationUpdates(
             request,
             locationCallback!!,
-            null
+            Looper.getMainLooper()
         )
     }
 
     // -------------------------
-    // TIMER 1-second updates
+    // UPDATE LOCATION, DISTANCE, PACE
     // -------------------------
-    private fun startTimer() {
-        timerJob?.cancel()
+    private fun updateLocation(loc: Location) {
 
-        timerJob = viewModelScope.launch {
-            while (_uiState.value.isTracking) {
-                val elapsedSec = (System.currentTimeMillis() - startTime) / 1000
-                _uiState.value = _uiState.value.copy(
-                    durationSeconds = elapsedSec
-                )
-                delay(1000L)
-            }
-        }
-    }
+        val newPoint = LatLng(loc.latitude, loc.longitude)
 
-    // -------------------------
-    // UPDATE LOCATION + DISTANCE + PACE (m/s)
-    // -------------------------
-    private fun updateLocation(location: Location) {
-
-        val newPoint = LatLng(location.latitude, location.longitude)
-
-        // Always update camera target
+        // update camera position
         mapCameraPosition.value = newPoint
 
         if (!_uiState.value.isTracking) return
 
         val points = _uiState.value.routePoints
-        var dist = _uiState.value.distanceMeters
+        var totalDist = _uiState.value.distanceMeters
 
         if (points.isNotEmpty()) {
             val last = points.last()
-            val temp = FloatArray(1)
+            val result = FloatArray(1)
             Location.distanceBetween(
                 last.latitude, last.longitude,
                 newPoint.latitude, newPoint.longitude,
-                temp
+                result
             )
-            dist += temp[0]
+            totalDist += result[0]
         }
 
-        // Calculate pace (m/s)
-        val seconds = _uiState.value.durationSeconds
-        val pace = if (seconds > 0) dist / seconds else 0.0
+        val sec = _uiState.value.durationSeconds
+        val pace = if (sec > 0) totalDist / sec else 0.0
 
         _uiState.value = _uiState.value.copy(
             routePoints = points + newPoint,
-            distanceMeters = dist,
+            distanceMeters = totalDist,
             paceMps = pace
         )
     }

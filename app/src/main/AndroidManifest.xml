@@ -8,6 +8,8 @@
     <!-- Location Permissions -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+
 
     <!-- Foreground Service Needed for GPS -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />

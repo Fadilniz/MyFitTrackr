@@ -10,9 +10,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.maps.android.compose.*
 import week11.st078050.finalproject.viewmodel.RouteTrackingViewModel
 
@@ -29,18 +29,23 @@ fun RouteTrackingScreen(
         viewModel.initialize()
     }
 
-    val cameraPositionState = rememberCameraPositionState()
+    val cameraState = rememberCameraPositionState()
 
-
+    // update map camera when location changes
+    LaunchedEffect(camPos) {
+        camPos?.let {
+            cameraState.position =  CameraPosition.fromLatLngZoom(it, 17f)
+        }
+    }
 
     Column(
-        modifier = Modifier
+        Modifier
             .fillMaxSize()
             .background(Color(0xFF0D0D1A)),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        // Top bar
+        // Top Bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -50,31 +55,27 @@ fun RouteTrackingScreen(
             IconButton(onClick = onBack) {
                 Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Color.White)
             }
-            Text(
-                text = "GPS Route Tracking",
-                color = Color.White,
-                style = MaterialTheme.typography.titleLarge
-            )
+            Text("GPS Route Tracking", color = Color.White, style = MaterialTheme.typography.titleLarge)
         }
 
-        // MAP
+        // Map Box
         Box(
-            modifier = Modifier
+            Modifier
                 .fillMaxWidth()
                 .height(300.dp)
                 .padding(12.dp)
         ) {
             GoogleMap(
-                cameraPositionState = cameraPositionState,
+                cameraPositionState = cameraState,
                 modifier = Modifier.fillMaxSize()
             )
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(Modifier.height(10.dp))
 
-        // Stats row
+        // Stats Row
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -97,12 +98,12 @@ fun RouteTrackingScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(Modifier.height(20.dp))
 
-        // Start Run button
+        // Start Run
         Button(
             onClick = { viewModel.startRun() },
-            modifier = Modifier
+            Modifier
                 .fillMaxWidth()
                 .padding(20.dp)
                 .height(55.dp),
@@ -111,10 +112,10 @@ fun RouteTrackingScreen(
             Text("Start Run", color = Color.Black)
         }
 
-        // Stop Run button
+        // Stop Run
         Button(
             onClick = { viewModel.stopRun() },
-            modifier = Modifier
+            Modifier
                 .fillMaxWidth()
                 .padding(20.dp)
                 .height(55.dp),

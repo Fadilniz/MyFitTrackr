@@ -96,7 +96,6 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
 
-
         // POSE DETECTION
         composable("pose") {
             PoseDetectionScreen(

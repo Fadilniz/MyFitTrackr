@@ -117,11 +117,7 @@ class RouteTrackingViewModel(application: Application) : AndroidViewModel(applic
             }
         }
 
-        fusedClient.requestLocationUpdates(
-            request,
-            locationCallback!!,
-            Looper.getMainLooper()
-        )
+
     }
 
     // -------------------------

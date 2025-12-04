@@ -3,6 +3,8 @@ package week11.st078050.finalproject.screens
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -13,8 +15,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.model.CameraPosition
-import com.google.maps.android.compose.*
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.rememberCameraPositionState
 import week11.st078050.finalproject.viewmodel.RouteTrackingViewModel
+
+data class RunHistoryEntry(
+    val id: Int,
+    val distanceMeters: Double,
+    val durationSeconds: Long,
+    val paceMps: Double
+)
 
 @SuppressLint("MissingPermission")
 @Composable
@@ -22,8 +32,12 @@ fun RouteTrackingScreen(
     viewModel: RouteTrackingViewModel = viewModel(),
     onBack: () -> Unit
 ) {
-    val ui = viewModel.uiState.collectAsState().value
-    val camPos = viewModel.mapCameraPosition.collectAsState().value
+    val ui by viewModel.uiState.collectAsState()
+    val camPos by viewModel.mapCameraPosition.collectAsState()
+
+    // local history list (only for this screen session)
+    val runHistory = remember { mutableStateListOf<RunHistoryEntry>() }
+    var nextId by remember { mutableStateOf(1) }
 
     LaunchedEffect(Unit) {
         viewModel.initialize()
@@ -34,12 +48,12 @@ fun RouteTrackingScreen(
     // update map camera when location changes
     LaunchedEffect(camPos) {
         camPos?.let {
-            cameraState.position =  CameraPosition.fromLatLngZoom(it, 17f)
+            cameraState.position = CameraPosition.fromLatLngZoom(it, 17f)
         }
     }
 
     Column(
-        Modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF0D0D1A)),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -55,12 +69,16 @@ fun RouteTrackingScreen(
             IconButton(onClick = onBack) {
                 Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Color.White)
             }
-            Text("GPS Route Tracking", color = Color.White, style = MaterialTheme.typography.titleLarge)
+            Text(
+                text = "GPS Route Tracking",
+                color = Color.White,
+                style = MaterialTheme.typography.titleLarge
+            )
         }
 
         // Map Box
         Box(
-            Modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .height(300.dp)
                 .padding(12.dp)
@@ -75,7 +93,7 @@ fun RouteTrackingScreen(
 
         // Stats Row
         Row(
-            Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -103,9 +121,9 @@ fun RouteTrackingScreen(
         // Start Run
         Button(
             onClick = { viewModel.startRun() },
-            Modifier
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(horizontal = 20.dp)
                 .height(55.dp),
             colors = ButtonDefaults.buttonColors(Color(0xFFFFE766))
         ) {
@@ -114,14 +132,92 @@ fun RouteTrackingScreen(
 
         // Stop Run
         Button(
-            onClick = { viewModel.stopRun() },
-            Modifier
+            onClick = {
+                // 1) stop tracking in ViewModel
+                viewModel.stopRun()
+
+                // 2) take the final stats and push into history
+                if (ui.durationSeconds > 0 && ui.distanceMeters > 0.0) {
+                    val entry = RunHistoryEntry(
+                        id = nextId++,
+                        distanceMeters = ui.distanceMeters,
+                        durationSeconds = ui.durationSeconds,
+                        paceMps = ui.paceMps
+                    )
+                    runHistory.add(0, entry) // add at top
+                }
+            },
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(horizontal = 20.dp, vertical = 8.dp)
                 .height(55.dp),
             colors = ButtonDefaults.buttonColors(Color.Red)
         ) {
             Text("Stop", color = Color.White)
+        }
+
+        // -----------------------------
+        // History under the Stop button
+        // -----------------------------
+        if (runHistory.isNotEmpty()) {
+            Text(
+                text = "History",
+                color = Color.White,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp)
+            )
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f, fill = true) // take the remaining space
+                    .padding(horizontal = 20.dp)
+            ) {
+                items(runHistory, key = { it.id }) { run ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A2A))
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            // Distance in km
+                            Text(
+                                text = "Distance: ${"%.2f".format(run.distanceMeters / 1000)} km",
+                                color = Color(0xFFFFE766),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+
+                            // Time mm:ss
+                            Text(
+                                text = "Time: ${
+                                    String.format(
+                                        "%02d:%02d",
+                                        run.durationSeconds / 60,
+                                        run.durationSeconds % 60
+                                    )
+                                }",
+                                color = Color.White,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+
+                            // Average speed
+                            Text(
+                                text = "Average Speed: ${
+                                    if (run.paceMps > 0)
+                                        "${"%.2f".format(run.paceMps)} m/s"
+                                    else
+                                        "--"
+                                }",
+                                color = Color.White,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

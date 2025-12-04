@@ -92,9 +92,10 @@ fun AppNavGraph(navController: NavHostController) {
         // ROUTE TRACKING
         composable("track") {
             RouteTrackingScreen(
-                onBackClick = { navController.popBackStack() }
+                onBack = { navController.popBackStack() }
             )
         }
+
 
         // POSE DETECTION
         composable("pose") {

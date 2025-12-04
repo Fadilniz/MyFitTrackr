@@ -16,9 +16,8 @@ data class RouteUiState(
     val isTracking: Boolean = false,
     val routePoints: List<LatLng> = emptyList(),
     val distanceMeters: Double = 0.0,
-    val durationMillis: Long = 0L,
-    val formattedDuration: String = "00:00",
-    val paceString: String = "--"
+    val durationSeconds: Long = 0L,
+    val paceMps: Double = 0.0,  // meters/second
 )
 
 class RouteTrackingViewModel(application: Application) : AndroidViewModel(application) {
@@ -32,106 +31,114 @@ class RouteTrackingViewModel(application: Application) : AndroidViewModel(applic
     private var timerJob: Job? = null
     private var startTime = 0L
 
+    val mapCameraPosition = MutableStateFlow<LatLng?>(null)
+
+    // -------------------------
+    // INITIALIZATION
+    // -------------------------
+    fun initialize() {
+        startLocationUpdates()
+    }
+
     // -------------------------
     // START RUN
     // -------------------------
     fun startRun() {
-
         if (_uiState.value.isTracking) return
 
         startTime = System.currentTimeMillis()
 
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(result: LocationResult) {
-                result.locations.forEach { loc -> updateLocation(loc) }
-            }
-        }
+        _uiState.value = _uiState.value.copy(
+            isTracking = true
+        )
 
-        _uiState.value = _uiState.value.copy(isTracking = true)
-
-        startTimer()   // ← IMPORTANT
+        startTimer()
     }
 
     // -------------------------
     // STOP RUN
     // -------------------------
     fun stopRun() {
-        fusedClient.removeLocationUpdates(locationCallback!!)
-        locationCallback = null
+        _uiState.value = _uiState.value.copy(
+            isTracking = false
+        )
         timerJob?.cancel()
-
-        _uiState.value = _uiState.value.copy(isTracking = false)
     }
 
     // -------------------------
-    // TIMER — updates EXACTLY every 1 second
+    // LOCATION UPDATES
+    // -------------------------
+    private fun startLocationUpdates() {
+
+        val request = LocationRequest.Builder(
+            Priority.PRIORITY_HIGH_ACCURACY, 1000L
+        ).setMinUpdateDistanceMeters(1f).build()
+
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(result: LocationResult) {
+                val newLoc = result.lastLocation ?: return
+                updateLocation(newLoc)
+            }
+        }
+
+        fusedClient.requestLocationUpdates(
+            request,
+            locationCallback!!,
+            null
+        )
+    }
+
+    // -------------------------
+    // TIMER 1-second updates
     // -------------------------
     private fun startTimer() {
         timerJob?.cancel()
 
         timerJob = viewModelScope.launch {
             while (_uiState.value.isTracking) {
-
-                val elapsed = System.currentTimeMillis() - startTime
-
+                val elapsedSec = (System.currentTimeMillis() - startTime) / 1000
                 _uiState.value = _uiState.value.copy(
-                    durationMillis = elapsed,
-                    formattedDuration = formatDuration(elapsed)
+                    durationSeconds = elapsedSec
                 )
-
-                delay(1000L) // EXACT 1 second
+                delay(1000L)
             }
         }
     }
 
-    private fun formatDuration(ms: Long): String {
-        val totalSec = (ms / 1000).toInt()
-        val min = totalSec / 60
-        val sec = totalSec % 60
-        return "%02d:%02d".format(min, sec)
-    }
-
     // -------------------------
-    // UPDATE LOCATION + DISTANCE + PACE
+    // UPDATE LOCATION + DISTANCE + PACE (m/s)
     // -------------------------
     private fun updateLocation(location: Location) {
 
+        val newPoint = LatLng(location.latitude, location.longitude)
+
+        // Always update camera target
+        mapCameraPosition.value = newPoint
+
         if (!_uiState.value.isTracking) return
 
-        val newPoint = LatLng(location.latitude, location.longitude)
         val points = _uiState.value.routePoints
-
-        var newDistance = _uiState.value.distanceMeters
+        var dist = _uiState.value.distanceMeters
 
         if (points.isNotEmpty()) {
             val last = points.last()
-
-            val result = FloatArray(1)
+            val temp = FloatArray(1)
             Location.distanceBetween(
                 last.latitude, last.longitude,
                 newPoint.latitude, newPoint.longitude,
-                result
+                temp
             )
-            newDistance += result[0]
+            dist += temp[0]
         }
+
+        // Calculate pace (m/s)
+        val seconds = _uiState.value.durationSeconds
+        val pace = if (seconds > 0) dist / seconds else 0.0
 
         _uiState.value = _uiState.value.copy(
             routePoints = points + newPoint,
-            distanceMeters = newDistance,
-            paceString = calculatePace(newDistance)
+            distanceMeters = dist,
+            paceMps = pace
         )
-    }
-
-    private fun calculatePace(distanceMeters: Double): String {
-        if (distanceMeters < 10) return "--"
-
-        val km = distanceMeters / 1000
-        val sec = (_uiState.value.durationMillis / 1000).toInt()
-
-        val paceSecPerKm = sec / km
-        val paceMin = (paceSecPerKm / 60).toInt()
-        val paceSec = (paceSecPerKm % 60).toInt()
-
-        return "%d:%02d /km".format(paceMin, paceSec)
     }
 }

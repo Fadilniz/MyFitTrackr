@@ -253,22 +253,7 @@ fun HomeScreen(
                 // ------------------------------------------
                 // AI POSE DETECTION
                 // ------------------------------------------
-                HomeSectionCard(onClick = onStartPoseDetection) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            "AI pose detection",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                color = TextWhite,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            "Analyse your exercise form using ML Kit.",
-                            style = MaterialTheme.typography.bodySmall.copy(color = TextGrey)
-                        )
-                    }
-                }
+
 
                 Spacer(Modifier.height(16.dp))
 

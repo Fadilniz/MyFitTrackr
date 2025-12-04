@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import week11.st078050.finalproject.ui.theme.components.GradientBackground
 import week11.st078050.finalproject.ui.theme.*
+import week11.st078050.finalproject.data.repository.LocalFitnessViewModel
 
 @Composable
 fun LoginScreen(
@@ -34,6 +35,7 @@ fun LoginScreen(
     var isLoading by remember { mutableStateOf(false) }
 
     val auth = FirebaseAuth.getInstance()
+    val vm = LocalFitnessViewModel.current   // 🔥 THE IMPORTANT NEW PART
 
     GradientBackground {
         Column(
@@ -43,7 +45,7 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // Top Back Arrow
+            // Back Arrow
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -72,7 +74,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // Title
             Text(
                 text = "Welcome back! Glad\nto see you, Again!",
                 color = TextWhite,
@@ -83,7 +84,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // Email Input
+            // EMAIL
             TextField(
                 value = email,
                 onValueChange = { email = it },
@@ -104,11 +105,26 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Password Input
+            // PASSWORD
             TextField(
                 value = password,
                 onValueChange = { password = it },
                 placeholder = { Text("Enter your password", color = TextGrey, fontSize = 15.sp) },
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            imageVector =
+                                if (passwordVisible) Icons.Filled.VisibilityOff
+                                else Icons.Filled.Visibility,
+                            contentDescription = "Toggle Password",
+                            tint = TextLightGrey
+                        )
+                    }
+                },
+                visualTransformation = if (passwordVisible)
+                    androidx.compose.ui.text.input.VisualTransformation.None
+                else
+                    androidx.compose.ui.text.input.PasswordVisualTransformation(),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = GreyInput,
                     unfocusedContainerColor = GreyInput,
@@ -118,18 +134,6 @@ fun LoginScreen(
                     unfocusedTextColor = TextWhite,
                     cursorColor = TextLightGrey
                 ),
-                trailingIcon = {
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(
-                            imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                            contentDescription = "Toggle Password",
-                            tint = TextLightGrey
-                        )
-                    }
-                },
-                visualTransformation =
-                    if (passwordVisible) androidx.compose.ui.text.input.VisualTransformation.None
-                    else androidx.compose.ui.text.input.PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(55.dp)
@@ -137,7 +141,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Forgot Password
             Text(
                 text = "Forgot Password?",
                 color = YellowAccent,
@@ -148,7 +151,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Error text
             errorMessage?.let {
                 Text(
                     text = it,
@@ -175,17 +177,20 @@ fun LoginScreen(
                             .addOnCompleteListener { task ->
                                 isLoading = false
                                 if (task.isSuccessful) {
+                                    val uid = task.result.user?.uid
+                                    if (uid != null) {
+                                        vm.onUserLogin(uid)  // 🔥 LOAD USER FITNESS DATA
+                                    }
                                     onLoginClick()
                                 } else {
-                                    errorMessage = task.exception?.message ?: "Login failed"
+                                    errorMessage =
+                                        task.exception?.message ?: "Login failed"
                                 }
                             }
                     }
                 },
                 enabled = !isLoading,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = WhiteButton
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = WhiteButton),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(55.dp)
@@ -200,14 +205,10 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Register Link
             Row {
+                Text("Don’t have an account? ", color = TextLightGrey)
                 Text(
-                    text = "Don’t have an account? ",
-                    color = TextLightGrey
-                )
-                Text(
-                    text = "Register Now",
+                    "Register Now",
                     color = YellowAccent,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.clickable { onRegisterClick() }

@@ -36,7 +36,7 @@ fun HomeScreen(
     onStartRoute: () -> Unit = {},
     onStartPoseDetection: () -> Unit = {},
     onLogout: () -> Unit = {},
-    onStepsClick: () -> Unit = {},
+    onStepsClick: () ->  Unit = {},
     onProfileClick: () -> Unit = {},
     onSensorDashboardClick: () -> Unit = {}
 ) {
@@ -52,13 +52,13 @@ fun HomeScreen(
     val calorieProg = vm.calorieProgress.collectAsState().value
     val distanceProg = vm.distanceProgress.collectAsState().value
 
-    // User info for greeting + profile picture
     val auth = remember { FirebaseAuth.getInstance() }
     val firestore = remember { FirebaseFirestore.getInstance() }
 
     var userName by remember { mutableStateOf("User") }
     var photoUrl by remember { mutableStateOf("") }
 
+    // Load profile info
     LaunchedEffect(Unit) {
         try {
             val uid = auth.currentUser?.uid ?: return@LaunchedEffect
@@ -68,9 +68,7 @@ fun HomeScreen(
                 if (user.username.isNotBlank()) userName = user.username
                 photoUrl = user.photoUrl
             }
-        } catch (_: Exception) {
-            // keep defaults
-        }
+        } catch (_: Exception) {}
     }
 
     GradientBackground {
@@ -92,7 +90,9 @@ fun HomeScreen(
                     .padding(horizontal = 20.dp, vertical = 12.dp)
             ) {
 
+                // ------------------------------------------
                 // WEEKLY GRAPH
+                // ------------------------------------------
                 Text(
                     text = "Weekly activity",
                     style = MaterialTheme.typography.titleMedium.copy(
@@ -104,27 +104,25 @@ fun HomeScreen(
                 Spacer(Modifier.height(10.dp))
 
                 val weeklyList = weeklySteps.values.toList()
+
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0x33222233)
-                    )
+                    colors = CardDefaults.cardColors(containerColor = Color(0x33222233))
                 ) {
                     Box(modifier = Modifier.padding(16.dp)) {
                         WeeklyStepsGraph(
-                            stepsList = if (weeklyList.isNotEmpty()) {
-                                weeklyList
-                            } else {
-                                listOf(steps, steps, steps, steps, steps, steps, steps)
-                            }
+                            stepsList = if (weeklyList.isNotEmpty()) weeklyList
+                            else listOf(0, 0, 0, 0, 0, 0, 0)
                         )
                     }
                 }
 
                 Spacer(Modifier.height(18.dp))
 
-                // PROGRESS RINGS
+                // ------------------------------------------
+                // TODAY OVERVIEW
+                // ------------------------------------------
                 Text(
                     text = "Today’s overview",
                     style = MaterialTheme.typography.titleMedium.copy(
@@ -138,9 +136,7 @@ fun HomeScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0x33222233)
-                    )
+                    colors = CardDefaults.cardColors(containerColor = Color(0x33222233))
                 ) {
                     Row(
                         modifier = Modifier
@@ -169,14 +165,13 @@ fun HomeScreen(
 
                 Spacer(Modifier.height(20.dp))
 
+                // ------------------------------------------
                 // LIVE STEP COUNTER
-                HomeSectionCard(
-                    onClick = onStepsClick
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+                // ------------------------------------------
+                HomeSectionCard(onClick = onStepsClick) {
+                    Column(modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally) {
+
                         Text(
                             "Live step counter",
                             style = MaterialTheme.typography.titleMedium.copy(
@@ -184,14 +179,18 @@ fun HomeScreen(
                                 fontWeight = FontWeight.SemiBold
                             )
                         )
+
                         Spacer(Modifier.height(8.dp))
+
                         Text(
                             steps.toString(),
                             fontSize = 42.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = YellowAccent
                         )
+
                         Spacer(Modifier.height(2.dp))
+
                         Text(
                             "Steps today",
                             style = MaterialTheme.typography.bodySmall.copy(color = TextGrey)
@@ -201,7 +200,9 @@ fun HomeScreen(
 
                 Spacer(Modifier.height(18.dp))
 
+                // ------------------------------------------
                 // ROUTE TRACKING
+                // ------------------------------------------
                 HomeSectionCard {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
@@ -223,9 +224,7 @@ fun HomeScreen(
                                 .fillMaxWidth()
                                 .height(46.dp),
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = YellowAccent
-                            )
+                            colors = ButtonDefaults.buttonColors(containerColor = YellowAccent)
                         ) {
                             Text(
                                 "Start route tracking",
@@ -240,10 +239,10 @@ fun HomeScreen(
 
                 Spacer(Modifier.height(18.dp))
 
-                // POSE DETECTION
-                HomeSectionCard(
-                    onClick = onStartPoseDetection
-                ) {
+                // ------------------------------------------
+                // AI POSE DETECTION
+                // ------------------------------------------
+                HomeSectionCard(onClick = onStartPoseDetection) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             "AI pose detection",
@@ -262,20 +261,21 @@ fun HomeScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                // OPTIONAL: link to sensor dashboard
                 TextButton(
                     onClick = onSensorDashboardClick,
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
                     Text(
-                        text = "Open sensor dashboard",
+                        "Open sensor dashboard",
                         style = MaterialTheme.typography.bodySmall.copy(color = TextLightGrey)
                     )
                 }
 
                 Spacer(Modifier.height(8.dp))
 
+                // ------------------------------------------
                 // LOGOUT
+                // ------------------------------------------
                 Text(
                     "Logout",
                     style = MaterialTheme.typography.bodyLarge.copy(
@@ -284,7 +284,10 @@ fun HomeScreen(
                     ),
                     modifier = Modifier
                         .align(Alignment.Start)
-                        .clickable { onLogout() }
+                        .clickable {
+                            vm.onUserLogout()  // 🔥 CLEAR FITNESS DATA FOR NEXT USER
+                            onLogout()         // your nav + FirebaseAuth.signOut()
+                        }
                         .padding(vertical = 6.dp)
                 )
 
@@ -364,13 +367,10 @@ private fun HomeSectionCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0x44222233)
-        )
+        colors = CardDefaults.cardColors(containerColor = Color(0x44222233))
     ) {
         Column(
-            modifier = Modifier
-                .padding(horizontal = 18.dp, vertical = 14.dp),
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
             content = content
         )
     }

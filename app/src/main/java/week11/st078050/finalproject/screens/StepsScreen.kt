@@ -23,6 +23,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,7 +38,6 @@ import week11.st078050.finalproject.ui.theme.TextGrey
 import week11.st078050.finalproject.ui.theme.TextWhite
 import week11.st078050.finalproject.ui.theme.YellowAccent
 import week11.st078050.finalproject.ui.theme.components.GradientBackground
-import week11.st078050.finalproject.data.repository.FitnessViewModel
 import week11.st078050.finalproject.data.repository.LocalFitnessViewModel
 
 @Composable
@@ -45,13 +45,15 @@ fun StepsScreen(
     onBackClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val vm = LocalFitnessViewModel.current     // GLOBAL VIEWMODEL
+    val vm = LocalFitnessViewModel.current
 
-    // Steps start from persistent savedSteps
-    var steps by remember { mutableStateOf(vm.savedSteps) }
+    // 🔥 steps now come from ViewModel (per-user, persistent)
+    val steps by vm.steps.collectAsState()
+
     var hasSensor by remember { mutableStateOf(true) }
     var hasPermission by remember { mutableStateOf(false) }
 
+    // Text-to-Speech
     var textToSpeech by remember { mutableStateOf<TextToSpeech?>(null) }
     var lastAnnouncedHundreds by remember { mutableStateOf(0) }
 
@@ -61,11 +63,12 @@ fun StepsScreen(
         textToSpeech = tts
 
         onDispose {
-            tts.stop(); tts.shutdown()
+            tts.stop()
+            tts.shutdown()
         }
     }
 
-    // Permission logic
+    // Permission
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -94,6 +97,7 @@ fun StepsScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
+            // Back arrow
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -112,12 +116,19 @@ fun StepsScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            Text("Step Counter", color = TextWhite, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+            Text(
+                text = "Step Counter",
+                color = TextWhite,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = when {
                     !hasPermission -> "Waiting for activity permission..."
-                    !hasSensor -> "Step counter sensor not available."
+                    !hasSensor -> "Step counter sensor not available on this device."
                     else -> "Walk with your phone to see live steps."
                 },
                 color = TextGrey,
@@ -129,68 +140,84 @@ fun StepsScreen(
             if (hasPermission) {
                 StepSensorListener(
                     context = context,
-                    vm = vm,
-                    onStepsChanged = { newSteps ->
-                        steps = newSteps
-                        vm.saveSteps(newSteps)   // 🔥 SAVE PERSISTENTLY
+                    onStepsDelta = { delta ->
+                        vm.addSteps(delta)   // 🔥 per-user, also saved to Firestore
                     },
                     onSensorAvailability = { hasSensor = it }
                 )
             }
 
+            // Voice alerts every 100 steps
             LaunchedEffect(steps) {
-                val hundreds = steps / 100
-                if (hundreds > lastAnnouncedHundreds) {
-                    val announcement = hundreds * 100
-                    textToSpeech?.speak(
-                        "You have walked $announcement steps today",
-                        TextToSpeech.QUEUE_FLUSH,
-                        null,
-                        "steps-$announcement"
-                    )
-                    lastAnnouncedHundreds = hundreds
+                if (steps >= 100) {
+                    val hundreds = steps / 100
+                    if (hundreds > lastAnnouncedHundreds) {
+                        val roundedSteps = hundreds * 100
+                        textToSpeech?.speak(
+                            "You have walked $roundedSteps steps today",
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            "steps-$roundedSteps"
+                        )
+                        lastAnnouncedHundreds = hundreds
+                    }
+                } else {
+                    lastAnnouncedHundreds = 0
                 }
             }
 
+            // Circle UI
             Box(contentAlignment = Alignment.Center) {
                 Canvas(modifier = Modifier.size(200.dp)) {
-
                     drawArc(
                         color = Color(0x44FFFFFF),
                         startAngle = -90f,
                         sweepAngle = 360f,
                         useCenter = false,
-                        style = Stroke(18.dp.toPx(), cap = StrokeCap.Round)
+                        style = Stroke(width = 18.dp.toPx(), cap = StrokeCap.Round)
                     )
 
                     val progress = (steps.coerceAtMost(10000) / 10000f) * 360f
-
                     drawArc(
                         color = YellowAccent,
                         startAngle = -90f,
                         sweepAngle = progress,
                         useCenter = false,
-                        style = Stroke(18.dp.toPx(), cap = StrokeCap.Round)
+                        style = Stroke(width = 18.dp.toPx(), cap = StrokeCap.Round)
                     )
                 }
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(steps.toString(), color = TextWhite, fontSize = 40.sp, fontWeight = FontWeight.Bold)
-                    Text("steps today", color = TextGrey, fontSize = 16.sp)
+                    Text(
+                        text = steps.toString(),
+                        color = TextWhite,
+                        fontSize = 40.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "steps today",
+                        color = TextGrey,
+                        fontSize = 16.sp
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(40.dp))
 
             Button(
-                onClick = {},
+                onClick = { /* future logic */ },
                 colors = ButtonDefaults.buttonColors(containerColor = YellowAccent),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(55.dp),
                 shape = RoundedCornerShape(50)
             ) {
-                Text("Keep Moving", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                Text(
+                    text = "Keep Moving",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
             }
         }
     }
@@ -199,10 +226,12 @@ fun StepsScreen(
 @Composable
 private fun StepSensorListener(
     context: Context,
-    vm: FitnessViewModel,
-    onStepsChanged: (Int) -> Unit,
+    onStepsDelta: (Int) -> Unit,
     onSensorAvailability: (Boolean) -> Unit
 ) {
+    // We store only last TOTAL from sensor to compute deltas
+    var lastTotal by remember { mutableStateOf<Float?>(null) }
+
     DisposableEffect(Unit) {
         val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
         val stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
@@ -216,18 +245,25 @@ private fun StepSensorListener(
             val listener = object : SensorEventListener {
                 override fun onSensorChanged(event: SensorEvent) {
                     val total = event.values[0]
+                    val previous = lastTotal
+                    lastTotal = total
 
-                    // 🔥 Persistent baseline
-                    if (vm.baseStep == null) vm.baseStep = total
-
-                    val diff = total - (vm.baseStep ?: total)
-                    if (diff >= 0) onStepsChanged(diff.toInt())
+                    if (previous != null) {
+                        val diff = (total - previous).toInt()
+                        if (diff > 0) {
+                            onStepsDelta(diff)   // 🔥 send ONLY the new steps
+                        }
+                    }
                 }
 
                 override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
             }
 
-            sensorManager.registerListener(listener, stepSensor, SensorManager.SENSOR_DELAY_NORMAL)
+            sensorManager.registerListener(
+                listener,
+                stepSensor,
+                SensorManager.SENSOR_DELAY_NORMAL
+            )
 
             onDispose {
                 sensorManager.unregisterListener(listener)
